@@ -1,3 +1,5 @@
+import traceback
+
 class ErrorCollector:
     def __init__(self):    
         self.issues = []
@@ -89,6 +91,21 @@ class CompilerError(Exception):
         other_tuple = other.range.start.line, other.range.start.col
         return this_tuple < other_tuple
 
+class CharacterMiss(CompilerError):
+    def __init__(self, char, token):
+        desc = 'May you forget the "{}" after "{}"'.format(char, token.text)
+        super().__init__(desc, token.range)
+
+class InvalidType(CompilerError):
+    def __init__(self, token):
+        desc = '"{}" is not valid type name'.format(token.text)
+        super().__init__(desc, token.range)
+
+class IdentifierError(CompilerError):
+    def __init__(self, token):
+        desc = '"{}" is not a valid identifier'.format(token.text)
+        super().__init__(desc, token.range)
+
 class ErrorManager:
     def __enter__(self):
         return self
@@ -97,7 +114,8 @@ class ErrorManager:
         if exc_tb:
             if exc_type is CompilerError:
                 error_collector.add(exc_value)
-                return False
-        return True
-
-error_manager = ErrorManager()
+                return True
+            if exc_type.__bases__[0] is CompilerError:
+                error_collector.add(exc_value)
+                return True            
+        return False
