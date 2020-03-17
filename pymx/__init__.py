@@ -3,6 +3,7 @@
 import argparse
 
 from .lexer import tokenize
+from .parser import parse
 
 from .utils import print_tokens
 from .errors import error_collector, CompilerError
@@ -13,8 +14,9 @@ def main():
     objs = []
     for file in arguemnts.files:
         objs.append(process_file(file, arguemnts))
-
-    return error_collector.show()
+    
+    error_collector.show()
+    return not error_collector.ok()
 
 def get_arguments():
     parser = argparse.ArgumentParser(
@@ -34,6 +36,7 @@ def process_file(file, args):
         return None
     
     print_tokens(token_list)
+    tree = parse(token_list)
 
 def read_file(file):
     try:
