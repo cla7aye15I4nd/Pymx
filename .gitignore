@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 sample.mx
 run.py
+tests/Arch2018/
+tests/localjudge/
