@@ -75,7 +75,7 @@ class CompilerError(Exception):
                     f"  {self.range.start.full_line}\n"
                     f"  {indicator}")
         else:
-            return (f"{bold_color}shivyc: {color_code}{issue_type}:"
+            return (f"{bold_color}pymx: {color_code}{issue_type}:"
                     f"{reset_color} {self.descrip}")
 
     def __lt__(self, other):  # pragma: no cover        
