@@ -1,16 +1,10 @@
 import re
 
 from .tokens import keyword, symbols, Token
-from .tokens import number, string, true, false, null
+from .tokens import number, const_contents
 from .tokens import left_block_comment, right_block_comment, line_comment
 
-from ..errors import error_manager, Position, Range
-
-class Tagged:
-    def __init__(self, c, p):        
-        self.c = c
-        self.p = p
-        self.r = Range(p, p)
+from ..errors import ErrorManager, Position, Range
 
 def tokenize(code, filename):
     tokens = []
@@ -18,7 +12,7 @@ def tokenize(code, filename):
 
     in_comment = False
     for line_num, line in enumerate(lines):
-        with error_manager:
+        with ErrorManager():
             line_tokens, in_comment = tokenize_line(line, line_num + 1, filename, in_comment)
             tokens += line_tokens
     
@@ -34,28 +28,22 @@ def tokenize_line(line, line_num, filename, in_comment):
         
         kind, length = match_token(line, col)
         text = line[col : col + length]
-
+        
         start = Position(filename, line_num, col + 1, line)
         end   = start + length
         range = Range(start, end)
 
-        tk = Token(kind, text, text, range)
+        tk = Token(kind, text, text, range)        
 
-        contents = {
-            number : lambda text : int(text),
-            string : lambda text : re.escape(text[1 : -1]),
-            true   : lambda text : True,
-            false  : lambda text : False
-        }
-
-        if kind in contents:
-            tk.content = contents[kind](text)
+        if kind in const_contents:
+            tk.content = const_contents[kind](text)
 
         if kind == line_comment:
-            return line_tokens
+            return line_tokens, in_comment
         if in_comment:
             if kind == right_block_comment:
                 in_comment = False
+            col += 1
         elif kind == left_block_comment:
             in_comment = True
         else:

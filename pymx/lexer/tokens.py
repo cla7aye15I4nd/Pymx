@@ -1,3 +1,5 @@
+import re
+
 class Token:
     def __init__(self, kind, text="", content="", range=None):
         """Base class for token
@@ -10,6 +12,14 @@ class Token:
         self.text = text if text else kind
         self.content = content        
         self.range = range
+
+    def __eq__(self, other):
+        if type(other) is str:
+            return self.text == other
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 keyword = []
 symbols = []
@@ -79,3 +89,11 @@ right_block_comment = add_token(r'/\*', symbols)
 number = add_token('[0-9]*', symbols)
 string = add_token('"(?:[^"\\\\]|\\\\.)*"', symbols)
 identifier = add_token('[a-zA-Z][_a-zA-Z0-9]*', symbols)
+
+const_contents = {
+    number : lambda text : int(text),
+    string : lambda text : re.escape(text[1 : -1]),
+    true   : lambda text : True,
+    false  : lambda text : False,
+    null   : lambda text : None
+}
