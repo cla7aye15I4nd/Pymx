@@ -32,8 +32,8 @@ class Struct:
 
     def add_var(self, var):
         if var:
-            self.variables[var.name.text] = var
-        return var is not None
+            self.variables += var
+        return var
 
     def add_func(self, func):
         if func:

@@ -16,7 +16,7 @@ def parse_program(ctx:Context) -> Program:
     with ErrorManager():
         while not ctx.empty():
             if prog.add(parse_function(ctx)):
-                continue
+                continue            
             if prog.add(parse_structs(ctx)):
                 continue
             if prog.add(parse_decl(ctx)):
@@ -54,7 +54,8 @@ def parse_function(ctx:Context) -> Function:
     ctx.save()
     rtype = parse_type(ctx)
     if rtype is None:
-        raise InvalidType(ctx.top())
+        ctx.restore()
+        return None        
     
     name  = ctx.pop()
     if (name.kind != identifier or
@@ -70,6 +71,16 @@ def parse_function(ctx:Context) -> Function:
         return Function(rtype, name, params, body)
 
 def parse_structs(ctx:Context) -> Struct:
+    def parse_construct(ctx:Context, struct:Struct):
+        ctx.save()
+        if (ctx.pop() != struct.name.text or 
+                ctx.pop() != '(' or ctx.pop() != ')'):
+            ctx.restore()
+            return None
+        struct.construct = parse_block(ctx)
+        return struct
+        
+
     if ctx.top() != 'class':
         return None
     ctx.pop()
@@ -79,16 +90,17 @@ def parse_structs(ctx:Context) -> Struct:
         raise IdentifierError(name)
     char_check(ctx, '{')
 
-    # while ctx.top() != '}':
-    #     if parse_construct(tokens):
-    #         continue
-    #     if obj.add_function(Function.parse(tokens)):
-    #         continue
-    #     if obj.add_variable(Var.parse(tokens)):
-    #         continue
-    #     raise TypeDeclareError(tokens[0])            
+    obj = Struct(name)
+    while ctx.top() != '}':
+        if parse_construct(ctx, obj):
+            continue
+        if obj.add_func(parse_function(ctx)):
+            continue
+        if obj.add_var(parse_decl(ctx)):
+            continue
+        raise InvalidType(ctx.top())
         
-    #     tokens.pop(0)
-    #     SymbolForget.test(tokens, ';')
+    ctx.pop()
+    char_check(ctx, ';')
 
-    #     return obj
+    return obj

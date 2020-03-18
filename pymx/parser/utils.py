@@ -41,4 +41,5 @@ def parse_type(ctx:Context, no_array=False):
 def char_check(ctx, char):
     if ctx.top() != char:
         error_collector.add(CharacterMiss(char, ctx.prev()))
-    ctx.pop()
+    else:
+        ctx.pop()
