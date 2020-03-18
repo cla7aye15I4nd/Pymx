@@ -100,9 +100,13 @@ def parse_decl(ctx:Context) -> Decl:
     decls = []
 
     while True:
-        decls.append(Decl(var_type, ctx.top()))
+        decl = Decl(var_type, ctx.top())
         if ctx.pop().kind != identifier:
             error_collector.add(IdentifierError(ctx.prev()))
+        if ctx.top() == '=':
+            ctx.pop()
+            decl.var_expr = parse_expr(ctx)
+        decls.append(decl)
         if ctx.top() == ';':
             break
         char_check(ctx, ',')

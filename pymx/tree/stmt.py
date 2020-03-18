@@ -2,10 +2,11 @@ class Stmt:
     pass
 
 class Decl(Stmt):
-    def __init__(self, var_type, var_name):
+    def __init__(self, var_type, var_name, var_expr=None):
         super().__init__()
         self.var_type = var_type
         self.var_name = var_name
+        self.var_expr = var_expr
 
 class Block(Stmt):
     def __init__(self):
