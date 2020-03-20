@@ -1,7 +1,7 @@
 from ..tree.stmt import (Block, If, For, While, Break, Continue, Return, Decl)
 from ..lexer.tokens import identifier
 
-from ..errors import ErrorManager, error_collector
+from ..errors import ErrorManager, error_collector, CompilerError
 from ..errors import CharacterMiss, IdentifierError
 
 from .context import Context
@@ -28,7 +28,12 @@ def parse_statement(ctx:Context):
         return parse_decl(ctx)
     ctx.restore()
 
-    return parse_expr(ctx)
+    expr = parse_expr(ctx)
+    if expr is None:
+        desc = 'Unrecognized token {}'.format(ctx.top().text)
+        raise CompilerError(desc, range=ctx.top().range)
+    char_check(ctx, ';')
+    return expr
 
 def parse_block(ctx:Context) -> Block:
     char_check(ctx, '{')
@@ -83,10 +88,14 @@ def parse_while(ctx:Context) -> While:
         return While(sign, cond, body)
 
 def parse_break(ctx:Context) -> Break:
-    return Break(ctx.pop())
+    obj = Break(ctx.pop())
+    char_check(ctx, ';')
+    return obj
 
 def parse_continue(ctx:Context) -> Continue:
-    return Continue(ctx.pop())
+    obj = Continue(ctx.pop())
+    char_check(ctx, ';')
+    return obj    
 
 def parse_return(ctx:Context) -> Return:
     sign = ctx.pop()
@@ -102,13 +111,14 @@ def parse_decl(ctx:Context) -> Decl:
     while True:
         decl = Decl(var_type, ctx.top())
         if ctx.pop().kind != identifier:
-            error_collector.add(IdentifierError(ctx.prev()))
+            raise IdentifierError(ctx.prev())
         if ctx.top() == '=':
             ctx.pop()
             decl.var_expr = parse_expr(ctx)
         decls.append(decl)
-        if ctx.top() == ';':
-            break
-        char_check(ctx, ',')
-    ctx.pop()
+        if ctx.top() == ',':
+            ctx.pop()
+            continue
+        char_check(ctx, ';')
+        break
     return decls

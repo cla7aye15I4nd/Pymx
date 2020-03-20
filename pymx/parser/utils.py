@@ -26,16 +26,18 @@ def parse_type(ctx:Context, no_array=False):
 
     if no_array:
         return this_type
+    
     if ctx.top() == '[':
         this_type = ArrayType(0, tag)
         while ctx.top() == '[':
-            left = ctx.pop()
+            ctx.pop()            
             with ErrorManager():
                 if ctx.top() != ']':
-                    raise CharacterMiss(']', left)
+                    ctx.restore()
+                    return None
                 ctx.pop()
             this_type.dim += 1
-
+    
     return this_type
 
 def char_check(ctx, char):

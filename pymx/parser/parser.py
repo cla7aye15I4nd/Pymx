@@ -55,7 +55,7 @@ def parse_function(ctx:Context) -> Function:
     rtype = parse_type(ctx)
     if rtype is None:
         ctx.restore()
-        return None        
+        return None    
     
     name  = ctx.pop()
     if (name.kind != identifier or
@@ -67,8 +67,8 @@ def parse_function(ctx:Context) -> Function:
     with ErrorManager():        
         params = parse_params(ctx)
         body = parse_block(ctx)
-        
-        return Function(rtype, name, params, body)
+
+    return Function(rtype, name, params, body)
 
 def parse_structs(ctx:Context) -> Struct:
     def parse_construct(ctx:Context, struct:Struct):

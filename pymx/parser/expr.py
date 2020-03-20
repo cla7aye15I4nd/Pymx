@@ -24,27 +24,27 @@ def parse_expr(ctx:Context):
         if oper.text == '=':
             return Assign(oper, left, right)
         return Binary(oper, left, right)
-
-    while not ctx.empty():
-        expr = parse_element(ctx)
-        if expr is None:
-            break
+    
+    while not ctx.empty():        
         if fetch_expr:
+            expr = parse_element(ctx)
+            if expr is None:
+                break
             if type(expr) is Token: # operator
                 if expr.text not in unary:
                     error_collector.add(CompilerError('"{}" is not a valid unary operator'.format(expr.text), expr.range))
-                else:
+                else:                    
                     prefix.append(expr)
             else:
                 while prefix:
                     expr = make_unary(prefix[-1], expr)
                     prefix.pop()
 
-                fetch_expr = False
+                fetch_expr = False                
                 if oper is None:
                     elements.append(expr)
                 else:
-                    while stack and binary[stack[-1].text] <= binary[expr.text]:
+                    while stack and binary[stack[-1].text] <= binary[oper.text]:    
                         elements[-2] = make_binary(stack[-1], elements[-2], elements[-1])                        
                         stack.pop()
                         elements.pop()
@@ -54,16 +54,17 @@ def parse_expr(ctx:Context):
 
                     oper = None
         else:
-            if type(expr) is not Token:
-                raise CompilerError('"{}" is not a valid unary operator'.format(expr.text), expr.range)
+            expr = ctx.top()
             if expr.text in ['++', '--']:
+                ctx.pop()
                 elements[-1] = Self(expr, elements[-1], False)
-            elif expr.text not in binary:
-                raise CompilerError('"{}" is not a valid unary operator'.format(expr.text), expr.range)
             else:
+                if expr.text not in binary:
+                    break
+                ctx.pop()
                 oper = expr
                 fetch_expr = True
-            
+    
     if not elements:
         return None
     if fetch_expr or oper:
@@ -95,7 +96,7 @@ def parse_element(ctx:Context):
     
     return expr
 
-def parse_atom(ctx:Context):
+def parse_atom(ctx:Context):    
     if ctx.top() == 'new':
         return parse_creator(ctx)
     
@@ -119,7 +120,7 @@ def parse_atom(ctx:Context):
     
 def parse_creator(ctx:Context) -> Creator:
     ctx.pop()
-
+    
     sign = ctx.top()
     basetype = parse_type(ctx, True)
     if not basetype:
@@ -137,8 +138,9 @@ def parse_access(ctx:Context, expr) -> Access:
     access = Access(expr)
     while ctx.top() == '[':
         ctx.pop()
-        access.scale.append(parse_expr(ctx))
+        access.scale.append(parse_expr(ctx))        
         char_check(ctx, ']')
+    
     return access
 
 def parse_call(ctx:Context, expr) -> FuncCall:
@@ -154,5 +156,6 @@ def parse_call(ctx:Context, expr) -> FuncCall:
         if ctx.top() == ')':
             break
         char_check(ctx, ',')
+    ctx.pop()
 
     return func_call
