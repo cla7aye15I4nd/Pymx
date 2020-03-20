@@ -4,6 +4,8 @@ from ..lexer.tokens import identifier
 from ..errors import ErrorManager, error_collector, CompilerError
 from ..errors import CharacterMiss, IdentifierError
 
+from ..types import VoidType
+
 from .context import Context
 from .expr import parse_expr
 from .utils import parse_type, char_check
@@ -105,16 +107,21 @@ def parse_return(ctx:Context) -> Return:
         return Return(sign, expr)
 
 def parse_decl(ctx:Context) -> Decl:
+    token = ctx.top()
     var_type = parse_type(ctx)
+    if var_type == VoidType():
+        desc = 'Illegal void type variable'
+        error_collector.add(CompilerError(desc, range=ctx.prev().range))
     decls = []
 
     while True:
-        decl = Decl(var_type, ctx.top())
+        decl = Decl(token, var_type, ctx.top())
         if ctx.pop().kind != identifier:
             raise IdentifierError(ctx.prev())
         if ctx.top() == '=':
-            ctx.pop()
+            decl.sign = ctx.pop()
             decl.var_expr = parse_expr(ctx)
+            
         decls.append(decl)
         if ctx.top() == ',':
             ctx.pop()

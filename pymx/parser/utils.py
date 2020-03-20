@@ -28,7 +28,7 @@ def parse_type(ctx:Context, no_array=False):
         return this_type
     
     if ctx.top() == '[':
-        this_type = ArrayType(0, tag)
+        this_type = ArrayType(0, this_type)
         while ctx.top() == '[':
             ctx.pop()            
             with ErrorManager():

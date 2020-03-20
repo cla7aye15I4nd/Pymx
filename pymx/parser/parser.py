@@ -32,6 +32,7 @@ def parse_function(ctx:Context) -> Function:
             return params
 
         while True:
+            token = ctx.top()
             var_type = parse_type(ctx)
             if var_type is None:
                 raise InvalidType(ctx.top())
@@ -40,7 +41,7 @@ def parse_function(ctx:Context) -> Function:
             if var_name.kind is not identifier:
                 raise IdentifierError(var_name)
 
-            params.append(Decl(var_type, var_name))
+            params.append(Decl(token, var_type, var_name))
             
             if ctx.top() == ')':
                 break

@@ -21,7 +21,7 @@ def parse_expr(ctx:Context):
         return Unary(oper, expr)
     
     def make_binary(oper, left, right):
-        if oper.text == '=':
+        if oper.text == '=':            
             return Assign(oper, left, right)
         return Binary(oper, left, right)
     
@@ -74,7 +74,7 @@ def parse_expr(ctx:Context):
         raise CompilerError('Syntax after "{}"'.format(tk.text), tk.range)
 
     while stack:
-        elements[-2] = make_binary(stack[-1], elements[-1], elements[-2])
+        elements[-2] = make_binary(stack[-1], elements[-2], elements[-1])
         stack.pop()
         elements.pop()
     
@@ -131,11 +131,14 @@ def parse_creator(ctx:Context) -> Creator:
         ctx.pop()
         creator.add(parse_expr(ctx))
         char_check(ctx, ']')
+    if ctx.top() == '(':
+        ctx.pop()
+        char_check(ctx, ')')
 
     return creator
 
 def parse_access(ctx:Context, expr) -> Access:
-    access = Access(expr)
+    access = Access(expr, ctx.top())
     while ctx.top() == '[':
         ctx.pop()
         access.scale.append(parse_expr(ctx))        
