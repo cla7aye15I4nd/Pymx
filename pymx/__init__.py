@@ -4,9 +4,11 @@ import argparse
 
 from .lexer import tokenize
 from .parser import parse
+from .semantic import semantic_check
 
 from .utils import print_tokens
 from .errors import error_collector, CompilerError
+from .builtin import builtin
 
 def main():
     arguemnts = get_arguments()
@@ -37,6 +39,15 @@ def process_file(file, args):
     
     print_tokens(token_list)
     tree = parse(token_list)
+    
+    if not error_collector.ok():
+        return None
+    
+    tree.builtin = builtin
+    semantic_check(tree)
+
+    if not error_collector.ok() or args.syntax_only:
+        return None
 
 def read_file(file):
     try:
