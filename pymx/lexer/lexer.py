@@ -4,15 +4,15 @@ from .tokens import keyword, symbols, Token
 from .tokens import number, const_contents
 from .tokens import left_block_comment, right_block_comment, line_comment
 
-from ..errors import ErrorManager, Position, Range
+from ..errors import ErrorManager, Position, Range, CompilerError
 
 def tokenize(code, filename):
     tokens = []
     lines = code.splitlines()
 
     in_comment = False
-    for line_num, line in enumerate(lines):
-        with ErrorManager():
+    with ErrorManager():
+        for line_num, line in enumerate(lines):        
             line_tokens, in_comment = tokenize_line(line, line_num + 1, filename, in_comment)
             tokens += line_tokens
     
@@ -27,11 +27,11 @@ def tokenize_line(line, line_num, filename, in_comment):
             continue
         
         kind, length = match_token(line, col)
-        text = line[col : col + length]
-        
+        text = line[col : col + length] 
+
         start = Position(filename, line_num, col + 1, line)
         end   = start + length
-        range = Range(start, end)
+        range = Range(start, end)        
 
         tk = Token(kind, text, text, range)        
 
@@ -42,11 +42,14 @@ def tokenize_line(line, line_num, filename, in_comment):
             return line_tokens, in_comment
         if in_comment:
             if kind == right_block_comment:
-                in_comment = False
-            col += 1
+                in_comment = False                
+            else:
+                col += 1
         elif kind == left_block_comment:
             in_comment = True
         else:
+            if kind is None:
+                raise CompilerError('Invalid char {}'.format(line[col]), range=range)
             line_tokens.append(tk)
 
         col += length
@@ -61,6 +64,5 @@ def match_token(line, col):
         if res and len(res.group(0)) > length:            
             kind = rep
             length = len(res.group(0))
-
     return kind, length
             

@@ -84,7 +84,7 @@ add_token(r'\}'     , symbols)
 
 line_comment = add_token('//.*', symbols)
 left_block_comment = add_token(r'/\*', symbols)
-right_block_comment = add_token(r'/\*', symbols)
+right_block_comment = add_token(r'\*/', symbols)
 
 number = add_token('[0-9]*', symbols)
 string = add_token('"(?:[^"\\\\]|\\\\.)*"', symbols)
