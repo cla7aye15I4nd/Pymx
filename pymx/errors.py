@@ -110,12 +110,12 @@ class ErrorManager:
     def __enter__(self):
         return self
     
-    def __exit__(self, exc_type, exc_value, exc_tb):
+    def __exit__(self, exc_type, exc_value, exc_tb):        
         if exc_tb:
             if exc_type is CompilerError:
                 error_collector.add(exc_value)
-                return True
-            if exc_type.__bases__[0] is CompilerError:
+            elif exc_type.__bases__[0] is CompilerError:
                 error_collector.add(exc_value)
-                return True            
-        return False
+            else:
+                traceback.print_tb(exc_tb)
+        return True
