@@ -1,12 +1,15 @@
 class Stmt:
-    pass
+    def check(self, checker):        
+        return checker.check(checker, self)
 
 class Decl(Stmt):
-    def __init__(self, var_type, var_name, var_expr=None):
+    def __init__(self, token, var_type, var_name, var_expr=None, sign=None):
         super().__init__()
+        self.token = token
         self.var_type = var_type
         self.var_name = var_name
         self.var_expr = var_expr
+        self.sign = sign
 
 class Block(Stmt):
     def __init__(self):

@@ -1,8 +1,10 @@
 from .stmt import Stmt
 
 class Expr(Stmt):
-    def __init__(self):
+    def __init__(self, type=None, lval=False):
         super().__init__()
+        self.type = type
+        self.lval = lval
 
 class Unary(Expr):
     def __init__(self, oper, expr):
@@ -24,11 +26,11 @@ class Binary(Expr):
 
 class Assign(Binary):
     def __init__(self, oper, left, right):
-        super().__init__(oper, left, right)
+        super().__init__(oper, left, right)        
 
 class Dot(Binary):
     def __init__(self, oper, left, right):
-        super().__init__(oper, left, right)
+        super().__init__(oper, left, right.name)
 
 class Constant(Expr):
     def __init__(self, expr):
@@ -52,14 +54,15 @@ class This(Expr):
 
 class Var(Expr):
     def __init__(self, name):
-        super().__init__()
-        self.name = name
+        super().__init__(lval=True)
+        self.name = name        
 
 class Access(Expr):
-    def __init__(self, expr):
+    def __init__(self, expr, sign):
         super().__init__()
         self.expr = expr
         self.scale = []
+        self.sign = sign
     
     def add(self, expr):
         self.scale.append(expr)
