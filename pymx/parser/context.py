@@ -1,3 +1,5 @@
+from ..errors import CompilerError
+
 class Context:
     def __init__(self, tokens):        
         self.tokens = tokens
@@ -18,6 +20,8 @@ class Context:
         return self.tokens[self.current-1]
         
     def top(self):
+        if self.empty():
+            raise CompilerError('Unexpected EOF', range=self.prev().range)
         return self.tokens[self.current]
 
     def pop(self):
