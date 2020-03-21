@@ -2,6 +2,9 @@ class Object:
     def check(self, checker):        
         return checker.check(checker, self)
 
+    def build(self, builder):
+        return builder.build(builder, self)
+
 class Program(Object):
     def __init__(self):
         super().__init__()
