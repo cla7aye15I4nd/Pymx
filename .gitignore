@@ -127,7 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-sample.mx
-run.py
-tests/Arch2018/
-tests/localjudge/
+
+./sample.mx
+./run.py
+./semantic.bash
+./test.m
+
+tests/
+
