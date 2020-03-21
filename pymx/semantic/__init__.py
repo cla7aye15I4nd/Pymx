@@ -5,4 +5,4 @@ from . import checker
 
 def semantic_check(tree):    
     ctx.clear()
-    tree.check(checker)
+    return tree.check(checker)
