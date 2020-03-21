@@ -101,7 +101,7 @@ class ArrayType(Type):
         if type(other) is ArrayType:
             if other.kind is None or self.kind is None:
                 return True
-            return self.kind == other.kind
+            return self.kind == other.kind and self.dim == other.dim
         return False
 
 class NullType(Type):

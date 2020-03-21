@@ -1,6 +1,7 @@
 """ ACM Class 2018 Compiler Homework """
 
 import argparse
+import fileinput
 
 from .lexer import tokenize
 from .parser import parse
@@ -12,10 +13,7 @@ from .builtin import builtin
 
 def main():
     arguemnts = get_arguments()
-
-    objs = []
-    for file in arguemnts.files:
-        objs.append(process_file(file, arguemnts))
+    process_file(arguemnts)
     
     error_collector.show()
     return not error_collector.ok()
@@ -30,7 +28,8 @@ def get_arguments():
     parser.add_argument('-c', dest='syntax_only', action='store_true')
     return parser.parse_args()
 
-def process_file(file, args):
+def process_file(args):
+    file = args.files[0]
     code = read_file(file)
 
     token_list = tokenize(code, file)

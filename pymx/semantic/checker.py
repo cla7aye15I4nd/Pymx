@@ -37,6 +37,7 @@ def check_function(chk, func:Function):
                 new_stmts.append(stmt.check(chk))
             func.body.stmts = new_stmts
             
+    ctx.cur_func = None
     return func
 
 def check_struct(chk, struct:Struct):    
@@ -46,6 +47,8 @@ def check_struct(chk, struct:Struct):
             ctx.var_stack[-1][decl.var_name.text] = decl.check(chk)
         for func in struct.functions.values():
             func.check(chk)
+        if struct.construct:
+            struct.construct.check(chk)
         ctx.cur_struct = None
 
 def check_function_name(name):

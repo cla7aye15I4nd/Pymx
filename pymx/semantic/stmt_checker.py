@@ -83,9 +83,13 @@ def check_return(chk, return_:Return):
             return_type = VoidType()
 
         if ctx.cur_func:
-            type_equal_check(return_.sign, return_type, ctx.cur_func.rtype)            
-        elif return_.expr:
-            raise CompilerError('Invalid return statement in construct', range=return_.sign.range)
+            type_equal_check(return_.sign, return_type, ctx.cur_func.rtype)
+            return return_
+
+        if ctx.cur_struct and not return_.expr:
+            return return_
+
+        raise CompilerError('Invalid return statement in construct', range=return_.sign.range)
         
     return return_
 
