@@ -5,7 +5,7 @@ from ..errors import ErrorManager, InvalidType, IdentifierError, CharacterMiss
 from ..lexer.tokens import identifier
 
 from .context import Context
-from .stmt import parse_block, parse_decl
+from .stmt_parser import parse_block, parse_decl
 from .utils import parse_type, char_check
 
 def parse(tokens):

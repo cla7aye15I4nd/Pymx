@@ -7,7 +7,7 @@ from ..errors import CharacterMiss, IdentifierError
 from ..types import VoidType
 
 from .context import Context
-from .expr import parse_expr
+from .expr_parser import parse_expr
 from .utils import parse_type, char_check
 
 def parse_statement(ctx:Context):
