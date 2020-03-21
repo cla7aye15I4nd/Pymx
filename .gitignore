@@ -128,10 +128,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-./sample.mx
-./run.py
-./semantic.bash
-./test.m
+sample.mx
+run.py
+semantic.bash
+test.m
 
 tests/
 
