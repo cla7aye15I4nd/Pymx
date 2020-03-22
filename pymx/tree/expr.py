@@ -1,10 +1,11 @@
 from .stmt import Stmt
 
 class Expr(Stmt):
-    def __init__(self, type=None, lval=False):
+    def __init__(self, type=None, lval=False, left=False):
         super().__init__()
         self.type = type
         self.lval = lval
+        self.left = left
 
 class Unary(Expr):
     def __init__(self, oper, expr):
@@ -25,8 +26,9 @@ class Binary(Expr):
         self.right = right
 
 class Assign(Binary):
-    def __init__(self, oper, left, right):
+    def __init__(self, oper, left, right):        
         super().__init__(oper, left, right)        
+        self.left.left = True
 
 class Dot(Binary):
     def __init__(self, oper, left, right):
