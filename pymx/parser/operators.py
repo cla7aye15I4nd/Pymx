@@ -15,3 +15,25 @@ binary = {
 }
 
 operators = unary + list(binary)
+
+arith = {
+    '+'  : 'add' , 
+    '-'  : 'sub' ,
+    '*'  : 'mul' ,
+    '/'  : 'sdiv',
+    '%'  : 'srem',
+    '<<' : 'shl',
+    '>>' : 'ashr',
+    '|'  : 'or',
+    '&'  : 'and',
+    '^'  : 'xor',
+}
+
+logic = {
+    '==' : 'eq',
+    '!=' : 'ne',
+    '<'  : 'slt',
+    '<=' : 'sle',
+    '>'  : 'sgt',
+    '>=' : 'sge',
+}
