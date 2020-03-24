@@ -1,6 +1,11 @@
 from ..types import IntegerType
 from ..errors import ErrorManager, CompilerError
+
+from ..tree.stmt import Return
+from ..tree.expr import Constant
 from ..tree.prog import Program, Function, Struct
+
+from ..lexer.tokens import Token
 
 from .context import ctx, Scope
 from .stmt_checker import *
@@ -35,6 +40,16 @@ def check_function(chk, func:Function):
             new_stmts = []
             for stmt in func.body.stmts:
                 new_stmts.append(stmt.check(chk))
+            
+            if not new_stmts or type(new_stmts[-1]) is not Return:
+                if func.rtype == VoidType():
+                    new_stmts.append(Return(None, None))
+                elif func.rtype == BoolType():
+                    const = Constant(Token(None, 'false', False)).check(chk)
+                    new_stmts.append(Return(None, const))
+                else:
+                    const = Constant(Token(None, '0', 0)).check(chk)
+                    new_stmts.append(Return(None, const))
             func.body.stmts = new_stmts
             
     ctx.cur_func = None
