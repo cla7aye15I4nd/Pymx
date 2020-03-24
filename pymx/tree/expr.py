@@ -16,6 +16,7 @@ class Unary(Expr):
 class Self(Unary):
     def __init__(self, oper, expr, direct):
         super().__init__(oper, expr)
+        self.expr.left = True
         self.direct = direct
 
 class Binary(Expr):

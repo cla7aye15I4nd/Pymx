@@ -17,9 +17,9 @@ binary = {
 operators = unary + list(binary)
 
 arith = {
-    '+'  : 'add' , 
-    '-'  : 'sub' ,
-    '*'  : 'mul' ,
+    '+'  : 'add nsw' , 
+    '-'  : 'sub nsw' ,
+    '*'  : 'mul nsw' ,
     '/'  : 'sdiv',
     '%'  : 'srem',
     '<<' : 'shl',
