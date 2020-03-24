@@ -1,3 +1,5 @@
+from ..tree.stmt import Decl
+
 class Object:
     def check(self, checker):        
         return checker.check(checker, self)
@@ -45,7 +47,7 @@ class Program(Object):
             self.functions[obj.name.text] = obj
         elif type(obj) is Struct:
             self.structs[obj.name.text] = obj
-        else:
+        elif type(obj) is Decl:
             self.variables.append(obj)
 
 class Function(Object):
