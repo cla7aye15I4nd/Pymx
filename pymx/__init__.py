@@ -6,8 +6,9 @@ import fileinput
 from .lexer import tokenize
 from .parser import parse
 from .semantic import semantic_check
+from .IRbuilder import IRbuild
 
-from .utils import print_tokens
+from .utils import print_tokens, print_ir
 from .errors import error_collector, CompilerError
 from .builtin import builtin
 
@@ -43,10 +44,13 @@ def process_file(args):
         return None
     
     tree.builtin = builtin
-    semantic_check(tree)
+    tree = semantic_check(tree)
 
     if not error_collector.ok() or args.syntax_only:
         return None
+
+    ir = IRbuild(tree)
+    print_ir(ir)
 
 def read_file(file):
     try:

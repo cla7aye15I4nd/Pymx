@@ -14,3 +14,7 @@ def print_tokens(tokens):
         token_info += '{:<15} {}\n'.format(token.text, token.kind)
     token_info += '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n'
     return token_info
+
+@log('sample.ll')
+def print_ir(ir):
+    return ir.__str__()
