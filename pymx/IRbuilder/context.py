@@ -1,17 +1,21 @@
 import traceback
-from ..fakecode import Reg, Label
+from ..fakecode.types import Type
+from ..fakecode import Reg, Label, Global
 
 class Context:
     count = 0
+    string_count = 0
     label_stack = []
 
     var_id = 0
     var_map = {}
+    global_var = {}
 
     cur_prog = None
     cur_func = None
     cur_struct = None
 
+    gvar = []
     code = []
     branch = [] ## use for &&, ||
 
@@ -33,6 +37,11 @@ class Context:
         if name:
             self.var_map[name] = reg
         return reg
+
+    def find_var(self, name):
+        if name in self.var_map:
+            return self.var_map[name]
+        return self.global_var[name]
 
     def break_label(self):
         if not self.label_stack:
@@ -57,6 +66,12 @@ class Context:
             self.code += code
         else:
             self.code.append(code)
+
+    def add_string_const(self, string_const):        
+        self.string_count += 1
+        name = f'.str.{self.string_count}'
+        self.gvar.append(Global(Type(32, 4), name, 1, string_const))
+        return Reg(Type(32, 4), '@' + name)
 
     def push_br(self, true, false):
         self.branch.append((true, false))

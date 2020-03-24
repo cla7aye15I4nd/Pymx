@@ -19,6 +19,7 @@ def build_program(bd, prog:Program) -> Prog:
     for func in prog.functions.values():
         obj.add_function(func.build(bd))
 
+    obj.vars += ctx.gvar
     return obj
 
 def build_global_variable(prog:Program):
@@ -27,9 +28,11 @@ def build_global_variable(prog:Program):
         name = var.var_name.text
         vtype = cast(var.var_type)
         
-        variables.append(Global(vtype, name, vtype.align))
-        if var.expr:
-            pass
+        gvar = Global(vtype, name, vtype.align)
+        variables.append(gvar)
+        ctx.global_var[name] = Reg(vtype, '@' + name)
+        if var.var_expr:
+            pass # TODO
     return variables
 
 def build_function(bd, func:Function) -> Func:
@@ -42,11 +45,11 @@ def build_function(bd, func:Function) -> Func:
     
     for var in func.params:
         type = cast(var.var_type)
-        obj.append(Alloca(ctx.get_var(var.var_name.text, type)))
+        obj.append(Alloca(ctx.get_var(type, var.var_name.text)))
     
     for i, v in enumerate(func.params):
         src = ctx.var_map[v.var_name.text]
-        dest = Reg(cast(v.var_type), f'%{i}')
+        dest = Reg(cast(v.var_type), f'%{i + 1}')
         obj.append(Store(src, dest))
     
     func.body.build(bd)

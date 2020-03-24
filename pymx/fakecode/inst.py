@@ -21,7 +21,7 @@ class Load:
         self.dest = dest
 
     def __str__(self):
-        return '  {} = load {}, {}, align {}\n'.format(self.src.name, self.src.type, self.dest, self.src.type.align)
+        return '  {} = load {}, {}, align {}\n'.format(self.dest.name, self.src.type, self.src, self.src.type.align)
 
 class Branch:
     def __init__(self, var, true, false):
@@ -37,7 +37,7 @@ class Jump:
         self.dest = dest
 
     def __str__(self):
-        return '  br {}\n'.format(self.dest)
+        return '  br label %{}\n'.format(self.dest.label)
 
 class Ret:
     def __init__(self, reg=None):
@@ -56,7 +56,7 @@ class Arith:
         self.oper = arith[oper]
 
     def __str__(self):
-        return '  {} = {} nsw, {}, {}\n'.format(self.reg.name, self.oper, self.lhs, self.rhs.name)
+        return '  {} = {} {}, {}\n'.format(self.reg.name, self.oper, self.lhs, self.rhs.name)
 
 class Logic:
     def __init__(self, reg, oper, lhs, rhs):
@@ -67,3 +67,18 @@ class Logic:
 
     def __str__(self):
         return '  {} = icmp {} {}, {}\n'.format(self.reg.name, self.oper, self.lhs, self.rhs.name)
+
+class Call:
+    def __init__(self, reg, name, params):
+        self.reg = reg
+        self.name = name
+        self.params = params
+
+    def __str__(self):
+        params = ', '.join([str(par) for par in self.params])
+        return '  {} = call {} @{}({})\n'.format(self.reg.name, self.reg.type, self.name, params)
+
+class Malloc(Call):
+    def __init__(self, reg, par):
+        super().__init__(reg, '__malloc', [par])
+

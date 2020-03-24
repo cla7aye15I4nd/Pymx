@@ -52,6 +52,8 @@ class Global:
         self.value = value
 
     def __str__(self):
+        if type(self.value) is str:
+            return '@{} = private unnamed_addr constant [{} x i8] c"{}", align 1'.format(self.name, len(self.value), self.value)
         return '@{} = global {} {}, align {}\n'.format(self.name, self.vtype, self.value, self.align)
 
 class Reg:
