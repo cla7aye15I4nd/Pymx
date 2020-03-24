@@ -148,6 +148,7 @@ def check_var(chk, var:Var):
     scope_var = ctx.find_variable(var.name.text)
     if scope_var is None:
         raise CompilerError('{} has not been define'.format(var.name.text), range=var.name.range)
+    var.name.text = scope_var.var_name.text
     var.type = scope_var.var_type
     return var
 
