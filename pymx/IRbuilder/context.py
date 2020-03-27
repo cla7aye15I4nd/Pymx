@@ -73,6 +73,9 @@ class Context:
         self.gvar.append(Global(Type(32, 4), name, 1, string_const))
         return Reg(Type(32, 4), '@' + name)
 
+    def have_br(self):
+        return len(self.branch) > 0
+
     def push_br(self, true, false):
         self.branch.append((true, false))
     

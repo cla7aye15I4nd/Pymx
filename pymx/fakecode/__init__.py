@@ -53,7 +53,7 @@ class Global:
 
     def __str__(self):
         if type(self.value) is str:
-            return '@{} = private unnamed_addr constant [{} x i8] c"{}", align 1'.format(self.name, len(self.value), self.value)
+            return '@{} = private unnamed_addr constant [{} x i8] c"{}", align 1\n'.format(self.name, len(self.value), self.value)
         return '@{} = global {} {}, align {}\n'.format(self.name, self.vtype, self.value, self.align)
 
 class Reg:
@@ -78,3 +78,12 @@ class Const:
 
     def __str__(self):
         return '{} {}'.format(self.type, self.name)
+
+class Phi:
+    def __init__(self, reg, units):
+        self.reg = reg
+        self.units = units
+
+    def __str__(self):
+        br = ', '.join([f'[ {w[0].name}, @{w[1].label} ]' for w in self.units])
+        return '  {} = phi {} {}\n'.format(self.reg.name, self.reg.type, br)

@@ -14,11 +14,8 @@ def build_block(bd, block:Block):
 def build_if(bd, if_:If):
     then_label = ctx.get_label()
     else_label = ctx.get_label()
-    ctx.push_br(then_label, else_label)
 
     reg = do_build(bd, if_.cond)
-    ctx.pop_br()
-
     ctx.add(Branch(reg, then_label, else_label))
     ctx.add(then_label)
     do_build(bd, if_.if_body)
@@ -56,6 +53,7 @@ def build_while(bd, while_:While):
 
     ctx.add(start)
     reg = do_build(bd, while_.cond)
+    
     ctx.add(Branch(reg, then, end))
 
     ctx.add(then)
@@ -74,9 +72,7 @@ def build_continue(bd, continue_:Continue):
 
 def build_return(bd, return_:Return):
     if return_.expr:
-        ctx.push_br(None, None)
         reg = do_build(bd, return_.expr)
-        ctx.pop_br()
         ctx.add(Ret(reg))
     else:
         ctx.add(Ret())

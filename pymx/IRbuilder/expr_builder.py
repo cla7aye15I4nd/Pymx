@@ -3,7 +3,7 @@ from ..tree.expr import Unary, Self
 from ..tree.expr import Constant, This, Var
 from ..tree.expr import Access, Creator, FuncCall
 
-from ..fakecode import Const
+from ..fakecode import Const, Phi
 from ..fakecode.inst import Call, Malloc, Alloca, Branch
 from ..fakecode.inst import Arith, Logic, Load, Store
 from ..fakecode.types import Type, cast
@@ -42,24 +42,56 @@ def build_self(bd, self:Self):
     return after if self.direct else before
 
 def build_binary(bd, binary:Binary):
-    lhs = do_build(bd, binary.left)
-    rhs = do_build(bd, binary.right)    
+    
     op  = binary.oper.text
     this_type = cast(binary.type)
 
     if op in arith:
+        lhs = do_build(bd, binary.left)
+        rhs = do_build(bd, binary.right)
         reg = ctx.get_var(this_type)
         ctx.add(Arith(reg, op, lhs, rhs))
-    elif op in logic:
+        return reg
+    
+    if op in logic:
         this_type.bit = 8
+        lhs = do_build(bd, binary.left)
+        rhs = do_build(bd, binary.right)            
         reg = ctx.get_var(this_type)
         ctx.add(Logic(reg, op, lhs, rhs))
-    elif op == '&&':
-        pass
-    elif op == '||':
-        pass
-
-    return reg
+        return reg
+    
+    const_true = Const(Type(8, 1), 1)
+    const_false = Const(Type(8, 1), 0)
+    if op == '&&':            
+        true = ctx.get_label()
+        false = ctx.get_label()
+        
+        left = ctx.get_label()                
+        lhs = do_build(bd, binary.left)
+        ctx.add(left)
+        ctx.add(Branch(lhs, true, false))
+        ctx.add(true)
+        rhs = do_build(bd, binary.right)
+        reg = ctx.get_var(rhs.type)
+        ctx.add(false)
+        ctx.add(Phi(reg, [(const_false, false), (rhs, true)]))
+        return reg
+        
+    if op == '||':
+        true = ctx.get_label()
+        false = ctx.get_label()
+        
+        left = ctx.get_label()                
+        lhs = do_build(bd, binary.left)
+        ctx.add(left)
+        ctx.add(Branch(lhs, true, false))
+        ctx.add(false)
+        rhs = do_build(bd, binary.right)
+        reg = ctx.get_var(rhs.type)
+        ctx.add(true)
+        ctx.add(Phi(reg, [(const_true, left), (rhs, false)]))
+        return reg
 
 def build_assign(bd, assign:Assign):
     reg = do_build(bd, assign.left)
