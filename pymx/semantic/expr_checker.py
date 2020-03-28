@@ -73,7 +73,7 @@ def check_binary(chk, binary:Binary):
     return binary
 
 def check_assign(chk, assign:Assign):
-    do_check(chk, assign.left)
+    assign.left = do_check(chk, assign.left)
     assign.right = do_check(chk, assign.right)
     assign.type = VoidType()
     
@@ -145,11 +145,21 @@ def check_this(chk, this:This):
     return this
 
 def check_var(chk, var:Var):
-    scope_var = ctx.find_variable(var.name.text)
+    scope_var, d = ctx.find_variable(var.name.text)
     if scope_var is None:
         raise CompilerError('{} has not been define'.format(var.name.text), range=var.name.range)
     var.name.text = scope_var.var_name.text
     var.type = scope_var.var_type
+    if d == 2 and ctx.cur_struct:        
+        this = This(None)
+        this.type = PointerType(kind=ctx.cur_struct.name.text)
+        
+        dot = Dot(None, this, var)
+        dot.type = var.type
+        dot.lval = True
+        dot.lhs  = var.lhs
+        
+        return dot
     return var
 
 def check_access(chk, access:Access):

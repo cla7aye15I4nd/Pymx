@@ -25,7 +25,7 @@ def check_program(chk, prog:Program):
                 raise CompilerError('no main function')
     return ctx.cur_prog
 
-def check_function(chk, func:Function):
+def check_function(chk, func:Function):    
     ctx.cur_func = func
 
     with Scope():
@@ -39,8 +39,8 @@ def check_function(chk, func:Function):
             
             new_stmts = []
             for stmt in func.body.stmts:
-                new_stmts.append(stmt.check(chk))
-            
+                new_stmts.append(stmt.check(chk))            
+                
             if not new_stmts or type(new_stmts[-1]) is not Return:
                 if func.rtype == VoidType():
                     new_stmts.append(Return(None, None))

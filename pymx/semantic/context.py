@@ -42,10 +42,12 @@ class Context:
         return new_name
 
     def find_variable(self, name):
-        for scope in self.var_stack[::-1]:
+        depth = len(self.var_stack)
+        for scope in self.var_stack[::-1]:            
             if name in scope:
-                return scope[name]
-        return None
+                return scope[name], depth
+            depth = depth - 1
+        return None, 0
 
     def enter_scope(self):
         self.var_stack.append({})

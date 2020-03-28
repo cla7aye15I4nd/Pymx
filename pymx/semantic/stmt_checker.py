@@ -13,7 +13,7 @@ def check_block(chk, block:Block):
             new_stmts = []
             for stmt in block.stmts:
                 new_stmts.append(stmt.check(chk))
-            block.stmts = new_stmts
+            block.stmts = new_stmts            
     return block
 
 def check_if(chk, if_:If):
