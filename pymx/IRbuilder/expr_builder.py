@@ -8,7 +8,7 @@ from ..fakecode.inst import Call, Malloc, Alloca, Branch
 from ..fakecode.inst import Arith, Logic, Load, Store
 from ..fakecode.types import Type, cast
 
-from ..types import StringType, NullType
+from ..types import StringType, NullType, BoolType, PointerType
 from ..parser.operators import arith, logic
 
 from .utils import do_build
@@ -99,7 +99,18 @@ def build_assign(bd, assign:Assign):
     ctx.add(Store(val, reg))
 
 def build_dot(bd, dot:Dot):
-    pass
+    body = do_build(bd, dot.left)
+    offset = ctx.struct[dot.left.type.kind].offset[dot.right.text]
+
+    ptr = ctx.get_var(cast(dot.left.type))
+    ctx.add(Arith(ptr, '+', body, Const(Type(32, 4), offset)))
+
+    if dot.lhs:
+        return ptr
+    else:
+        reg = ctx.get_var(cast(dot.type))
+        ctx.add(Load(ptr, reg))
+        return reg
 
 def build_constant(bd, constant:Constant):
     if constant.type == StringType():
@@ -109,11 +120,17 @@ def build_constant(bd, constant:Constant):
     return Const(cast(constant.type), constant.expr.content.__int__())
 
 def build_this(bd, this:This):
-    pass
+    addr = ctx.find_var('_this')
+    if this.lhs:        
+        return addr
+    else:
+        reg = ctx.get_var(addr.type)
+        ctx.add(Load(addr, reg))
+        return reg
 
 def build_var(bd, var:Var):
     addr = ctx.find_var(var.name.text)
-    if var.left:        
+    if var.lhs:        
         return addr
     else:
         reg = ctx.get_var(addr.type)
@@ -123,7 +140,14 @@ def build_var(bd, var:Var):
 def build_creator(bd, creator:Creator):
     if creator.scale:
         return malloc(bd, creator, 0)
-    # TODO
+    
+    ## new ideniifier ();
+    struct = ctx.struct[creator.basetype.kind]
+    ptr = ctx.get_var(Type(32, 4))
+    ctx.add(Malloc(ptr, struct.size))
+    if struct.exist:
+        ctx.add(Call(None, f'_{struct.name}', [ptr]))
+    return ptr
 
 def malloc(bd, creator:Creator, d:int):
     flag = (d + 1 == len(creator.scale) or 
@@ -133,7 +157,11 @@ def malloc(bd, creator:Creator, d:int):
     
     tmp = ctx.get_var(Type(32, 4))
     reg = ctx.get_var(Type(32, 4))
-    ctx.add(Arith(tmp, '*', cap, Const(Type(32, 4), 4))) #TODO
+
+    if creator.basetype == BoolType():
+        ctx.add(Arith(tmp, '*', cap, Const(Type(32, 4), 1)))
+    else:
+        ctx.add(Arith(tmp, '*', cap, Const(Type(32, 4), 4)))
     ctx.add(Arith(reg, '+', tmp, Const(Type(32, 4), 4)))
 
     ptr = ctx.get_var(Type(32, 4))
@@ -172,7 +200,8 @@ def build_access(bd, access:Access):
         tmp = ctx.get_var(Type(32, 4))
         reg = do_build(bd, expr)
         four = Const(Type(32, 4), 4)
-        ctx.add(Arith(tmp, '*', reg, four))
+        if access.type != BoolType():
+            ctx.add(Arith(tmp, '*', reg, four))
         ctx.add(Arith(off, '+', tmp, four))
         addr = ctx.get_var(Type(32, 4))
         ctx.add(Arith(addr, '+', ptr, off))
@@ -194,5 +223,10 @@ def build_funccall(bd, funcall:FuncCall):
         ctx.add(Call(reg, func.name.text, regs))
         return reg
     else:
-        pass
-        # TODO
+        regs = [do_build(bd, func.left)]
+        for expr in funcall.params:
+            regs.append(do_build(bd, expr))
+        reg = ctx.get_var(cast(funcall.type))
+        ctx.add(Call(reg, f'_{func.left.type.kind}_{func.right.text}', regs))
+        return reg
+    

@@ -18,6 +18,7 @@ class Context:
     gvar = []
     code = []
     branch = [] ## use for &&, ||
+    struct = {}
 
     def clear(self):
         self.count = 0
@@ -31,6 +32,8 @@ class Context:
         return label
 
     def get_var(self, type, name=None):
+        if type.bit == 0:
+            return None
         self.count += 1
         new = '%{}'.format(self.count)
         reg = Reg(type, new)
@@ -87,5 +90,8 @@ class Context:
     
     def false_br(self):
         return self.branch[-1][1]
+
+    def add_struct(self, struct):
+        self.struct[struct.name] = struct
 
 ctx = Context()

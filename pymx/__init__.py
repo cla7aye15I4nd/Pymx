@@ -1,5 +1,6 @@
 """ ACM Class 2018 Compiler Homework """
 
+import os
 import argparse
 import fileinput
 
@@ -27,6 +28,7 @@ def get_arguments():
 
     parser.add_argument('files', metavar='files', nargs="+")
     parser.add_argument('-c', dest='syntax_only', action='store_true')
+    parser.add_argument('-l', dest='ir_file')
     return parser.parse_args()
 
 def process_file(args):
@@ -50,7 +52,19 @@ def process_file(args):
         return None
 
     ir = IRbuild(tree)
-    print_ir(ir)
+
+    if args.ir_file:
+        write_file(args.ir_file, ir.__str__())
+    else:
+        write_file(os.path.splitext(os.path.basename(file))[0] + '.ll', ir.__str__())
+    
+
+def write_file(file, text):
+    try:
+        with open(file, 'w') as f:
+            f.write(text)
+    except IOError:
+        error_collector.add(CompilerError(f'Can not write {file}'))
 
 def read_file(file):
     try:
