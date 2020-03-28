@@ -4,9 +4,13 @@ class Prog:
     def __init__(self):
         self.vars = []
         self.func = []
+        self.struct = []        
 
     def add_function(self, func):
         self.func.append(func)
+
+    def add_struct(self, struct):
+        self.struct.append(struct)
 
     def __str__(self):
         code = ''
@@ -43,6 +47,17 @@ class Func:
         code += ''.join([str(x) for x in self.code])
 
         return code + '}\n\n'
+
+class Union:
+    def __init__(self, name, size, offset, exist):
+        self.name = name
+        self.size = size
+        self.offset = offset
+        self.func = []
+        self.exist = exist
+
+    def add_function(self, func):
+        self.func.append(func)
 
 class Global:
     def __init__(self, vtype, name, align=4, value=0):

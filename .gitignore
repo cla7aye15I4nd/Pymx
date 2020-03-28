@@ -136,3 +136,4 @@ test.m
 tests/
 
 sample.ll
+codegen.bash

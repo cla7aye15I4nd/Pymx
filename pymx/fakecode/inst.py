@@ -76,7 +76,10 @@ class Call:
 
     def __str__(self):
         params = ', '.join([str(par) for par in self.params])
-        return '  {} = call {} @{}({})\n'.format(self.reg.name, self.reg.type, self.name, params)
+        if self.reg:
+            return '  {} = call {} @{}({})\n'.format(self.reg.name, self.reg.type, self.name, params)
+        else:
+            return '  call void @{}({})\n'.format(self.name, params)
 
 class Malloc(Call):
     def __init__(self, reg, par):
