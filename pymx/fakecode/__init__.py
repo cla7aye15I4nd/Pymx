@@ -1,7 +1,7 @@
 """ fake code like llvm """
 
 import string
-from .inst import Alloca
+from .inst import Alloca, Branch, Jump, Ret
 
 class Prog:
     def __init__(self):
@@ -51,6 +51,7 @@ class Func:
         alloc_code = []
         other_code = []
 
+        ## cut useless label
         for inst in self.code:
             if type(inst) is Alloca:
                 alloc_code.append(inst)
@@ -59,7 +60,9 @@ class Func:
                     if last:
                         table[f'%{other_code[-1].label}'] = inst.label
                     else:
-                        last = True                        
+                        last = True
+                        if type(other_code[-1]) not in [Branch, Jump, Ret]:
+                            other_code.append(Jump(inst))
                         other_code.append(inst)
                 else:
                     last = False
@@ -67,15 +70,16 @@ class Func:
         
         self.code = alloc_code + other_code
         for inst in self.code:
-            inst.replace(table, count, False)  
+            inst.standard(table, count, False)  
         
+        ## rename
         table = {}
         for i in range(1, count):
             table[f'%{i}'] = i
         for inst in self.code:                
-            count += inst.replace(table, count, True)
+            count += inst.standard(table, count, True)
         for inst in self.code:
-            inst.replace(table, count, False)  
+            inst.standard(table, count, False)  
         self.code = self.code
 
     def __str__(self):
@@ -117,7 +121,7 @@ class Reg:
     def __str__(self):
         return '{} {}'.format(self.type, self.name)
 
-    def replace(self, table):
+    def standard(self, table):
         if all(c in string.digits for c in self.name[1:]) and self.name in table:
             self.name = f'%{table[self.name]}'
 
@@ -128,13 +132,16 @@ class Label:
     def __str__(self):
         return '\n; <label>:{}:\n'.format(self.label)
 
-    def replace(self, table, count, first):
+    def standard(self, table, count, first):
         if first:
             table[f'%{self.label}'] = count
         else:
             if f'%{self.label}' in table:
                 self.label = table[f'%{self.label}']
         return 1
+
+    def replace_reg(self, table):
+        pass
 
 class Const:
     def __init__(self, type, name):
@@ -144,5 +151,5 @@ class Const:
     def __str__(self):
         return '{} {}'.format(self.type, self.name)
 
-    def replace(self, table):
+    def standard(self, table):
         pass

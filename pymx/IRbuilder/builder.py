@@ -5,6 +5,7 @@ from ..fakecode.inst import Alloca, Store
 from ..lexer.tokens import Token
 from ..tree.prog import Program, Function, Struct
 
+from .ssa import ssa_build
 from .context import ctx
 from .stmt_builder import *
 from .expr_builder import *
@@ -37,7 +38,7 @@ def build_program(bd, prog:Program) -> Prog:
     for func in prog.functions.values():
         obj.add_function(func.build(bd))
     for func in obj.func:
-        func.standard()
+        ssa_build(func)        
 
     obj.vars += ctx.gvar
     return obj
