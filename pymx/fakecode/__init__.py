@@ -61,7 +61,8 @@ class Func:
                         table[f'%{other_code[-1].label}'] = inst.label
                     else:
                         last = True
-                        if type(other_code[-1]) not in [Branch, Jump, Ret]:
+                        if (not other_code or 
+                            type(other_code[-1]) not in [Branch, Jump, Ret]):
                             other_code.append(Jump(inst))
                         other_code.append(inst)
                 else:

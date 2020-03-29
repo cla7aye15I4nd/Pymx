@@ -92,7 +92,7 @@ identifier = add_token('[a-zA-Z][_a-zA-Z0-9]*', symbols)
 
 const_contents = {
     number : lambda text : int(text),
-    string : lambda text : re.escape(text[1 : -1]),
+    string : lambda text : bytes(text[1 : -1], encoding = "utf8").decode('unicode-escape'),
     true   : lambda text : True,
     false  : lambda text : False,
     null   : lambda text : None
