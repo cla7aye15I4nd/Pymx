@@ -163,7 +163,7 @@ def check_var(chk, var:Var):
     return var
 
 def check_access(chk, access:Access):
-    access.expr.check(chk)
+    access.expr = access.expr.check(chk)
     if access.expr.type != ArrayType():
         raise CompilerError('{} is not array'.format(access.expr.type), range=access.sign.range)
         
