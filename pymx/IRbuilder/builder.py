@@ -16,7 +16,11 @@ def build(bd, obj):
 def build_program(bd, prog:Program) -> Prog:
     obj = Prog()
 
-    obj.vars = build_global_variable(prog)
+    obj.vars = build_global_variable(bd, prog)
+    func = Func(Type(0, 1), '__init_static')
+    func.append(ctx.code)
+    obj.add_function(func)
+
     for struct in prog.structs.values():
         struct = struct.build(bd)
         obj.add_struct(struct)
@@ -30,16 +34,17 @@ def build_program(bd, prog:Program) -> Prog:
             func.params = [Decl(None, ptype, Token(None, '_this'))] + func.params
             obj.add_function(func.build(bd))
 
-
     for func in prog.functions.values():
         obj.add_function(func.build(bd))
-    
+    for func in obj.func:
+        func.standard()
 
     obj.vars += ctx.gvar
     return obj
 
-def build_global_variable(prog:Program):
+def build_global_variable(bd, prog:Program):
     variables = []
+    ctx.clear()
     for var in prog.variables:
         name = var.var_name.text
         vtype = cast(var.var_type)
@@ -48,7 +53,8 @@ def build_global_variable(prog:Program):
         variables.append(gvar)
         ctx.global_var[name] = Reg(vtype, '@' + name)
         if var.var_expr:
-            pass # TODO
+            reg = var.var_expr.build(bd)
+            ctx.add(Store(reg, ctx.global_var[name]))
     return variables
 
 def build_function(bd, func:Function) -> Func:
@@ -71,7 +77,7 @@ def build_function(bd, func:Function) -> Func:
     func.body.build(bd)
     obj.append(ctx.code)
 
-    return obj
+    return obj      
 
 def build_struct(bd, struct:Struct):
     """ The function just handle offset """

@@ -3,12 +3,12 @@ from ..tree.expr import Unary, Self
 from ..tree.expr import Constant, This, Var
 from ..tree.expr import Access, Creator, FuncCall
 
-from ..fakecode import Const, Phi
+from ..fakecode import Const
 from ..fakecode.inst import Call, Malloc, Alloca, Branch
-from ..fakecode.inst import Arith, Logic, Load, Store
+from ..fakecode.inst import Arith, Logic, Load, Store, Phi
 from ..fakecode.types import Type, cast
 
-from ..types import StringType, NullType, BoolType, PointerType
+from ..types import StringType, NullType, BoolType, PointerType, ArrayType
 from ..parser.operators import arith, logic
 
 from .utils import do_build
@@ -144,7 +144,7 @@ def build_creator(bd, creator:Creator):
     ## new ideniifier ();
     struct = ctx.struct[creator.basetype.kind]
     ptr = ctx.get_var(Type(32, 4))
-    ctx.add(Malloc(ptr, struct.size))
+    ctx.add(Malloc(ptr, Const(Type(32, 4), struct.size)))
     if struct.exist:
         ctx.add(Call(None, f'_{struct.name}', [ptr]))
     return ptr
@@ -196,17 +196,19 @@ def malloc(bd, creator:Creator, d:int):
 def build_access(bd, access:Access):
     ptr = do_build(bd, access.expr)
     for count, expr in enumerate(access.scale):
-        off = ctx.get_var(Type(32, 4))
-        tmp = ctx.get_var(Type(32, 4))
+        off = ctx.get_var(Type(32, 4))        
         reg = do_build(bd, expr)
         four = Const(Type(32, 4), 4)
         if access.type != BoolType():
+            tmp = ctx.get_var(Type(32, 4))
             ctx.add(Arith(tmp, '*', reg, four))
-        ctx.add(Arith(off, '+', tmp, four))
+            ctx.add(Arith(off, '+', tmp, four))
+        else:
+            ctx.add(Arith(off, '+', reg, four))
         addr = ctx.get_var(Type(32, 4))
         ctx.add(Arith(addr, '+', ptr, off))
 
-        if count + 1 == len(access.scale) and access.left:
+        if count + 1 == len(access.scale) and access.lhs:
             return addr
         nptr = ctx.get_var(Type(32, 4))
         ctx.add(Load(addr, nptr))
@@ -227,6 +229,11 @@ def build_funccall(bd, funcall:FuncCall):
         for expr in funcall.params:
             regs.append(do_build(bd, expr))
         reg = ctx.get_var(cast(funcall.type))
-        ctx.add(Call(reg, f'_{func.left.type.kind}_{func.right.text}', regs))
+        if func.left.type == StringType():
+            ctx.add(Call(reg, f'_string_{func.right.text}', regs))
+        elif func.left.type == ArrayType():
+            ctx.add(Call(reg, f'__array_{func.right.text}', regs))
+        else:
+            ctx.add(Call(reg, f'_{func.left.type.kind}_{func.right.text}', regs))
         return reg
     

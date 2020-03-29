@@ -1,5 +1,7 @@
 """ fake code like llvm """
 
+from .inst import Alloca
+
 class Prog:
     def __init__(self):
         self.vars = []
@@ -40,6 +42,25 @@ class Func:
         else:
             self.code.append(code)
 
+    def standard(self):
+        count = len(self.params) + 1
+        alloc_code = []
+        other_code = []
+        for inst in self.code:
+            if type(inst) is Alloca:
+                alloc_code.append(inst)
+            else:
+                other_code.append(inst)
+        self.code = alloc_code + other_code
+
+        table = {}
+        for i in range(1, count):
+            table[f'%{i}'] = i
+        for inst in self.code:                
+            count += inst.replace(table, count, True)
+        for inst in self.code:
+            inst.replace(table, count, False)  
+
     def __str__(self):
         params = ', '.join([str(x) for x in self.params])
         code = 'define {} @{}({}) {{\n'.format(self.rtype, self.name, params)
@@ -79,12 +100,23 @@ class Reg:
     def __str__(self):
         return '{} {}'.format(self.type, self.name)
 
+    def replace(self, table):
+        if all(c in '0123456789' for c in self.name[1:]):
+            self.name = f'%{table[self.name]}'
+
 class Label:
     def __init__(self, label):
         self.label = label
 
     def __str__(self):
         return '\n; <label>:{}:\n'.format(self.label)
+
+    def replace(self, table, count, first):
+        if first:
+            table[f'%{self.label}'] = count
+        else:
+            self.label = table[f'%{self.label}']
+        return 1
 
 class Const:
     def __init__(self, type, name):
@@ -94,11 +126,5 @@ class Const:
     def __str__(self):
         return '{} {}'.format(self.type, self.name)
 
-class Phi:
-    def __init__(self, reg, units):
-        self.reg = reg
-        self.units = units
-
-    def __str__(self):
-        br = ', '.join([f'[ {w[0].name}, @{w[1].label} ]' for w in self.units])
-        return '  {} = phi {} {}\n'.format(self.reg.name, self.reg.type, br)
+    def replace(self, table):
+        pass
