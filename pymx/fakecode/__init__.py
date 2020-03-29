@@ -1,5 +1,6 @@
 """ fake code like llvm """
 
+import string
 from .inst import Alloca
 
 class Prog:
@@ -43,16 +44,31 @@ class Func:
             self.code.append(code)
 
     def standard(self):
+        table = {}
         count = len(self.params) + 1
+
+        last = False
         alloc_code = []
         other_code = []
+
         for inst in self.code:
             if type(inst) is Alloca:
                 alloc_code.append(inst)
             else:
-                other_code.append(inst)
+                if type(inst) is Label:
+                    if last:
+                        table[f'%{other_code[-1].label}'] = inst.label
+                    else:
+                        last = True                        
+                        other_code.append(inst)
+                else:
+                    last = False
+                    other_code.append(inst)
+        
         self.code = alloc_code + other_code
-
+        for inst in self.code:
+            inst.replace(table, count, False)  
+        
         table = {}
         for i in range(1, count):
             table[f'%{i}'] = i
@@ -102,7 +118,7 @@ class Reg:
         return '{} {}'.format(self.type, self.name)
 
     def replace(self, table):
-        if all(c in '0123456789' for c in self.name[1:]):
+        if all(c in string.digits for c in self.name[1:]) and self.name in table:
             self.name = f'%{table[self.name]}'
 
 class Label:
@@ -116,7 +132,8 @@ class Label:
         if first:
             table[f'%{self.label}'] = count
         else:
-            self.label = table[f'%{self.label}']
+            if f'%{self.label}' in table:
+                self.label = table[f'%{self.label}']
         return 1
 
 class Const:
