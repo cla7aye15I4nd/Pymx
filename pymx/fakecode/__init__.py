@@ -60,6 +60,7 @@ class Func:
             count += inst.replace(table, count, True)
         for inst in self.code:
             inst.replace(table, count, False)  
+        self.code = self.code
 
     def __str__(self):
         params = ', '.join([str(x) for x in self.params])

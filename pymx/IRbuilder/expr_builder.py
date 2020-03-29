@@ -4,7 +4,7 @@ from ..tree.expr import Constant, This, Var
 from ..tree.expr import Access, Creator, FuncCall
 
 from ..fakecode import Const
-from ..fakecode.inst import Call, Malloc, Alloca, Branch
+from ..fakecode.inst import Call, Malloc, Alloca, Branch, Jump
 from ..fakecode.inst import Arith, Logic, Load, Store, Phi
 from ..fakecode.types import Type, cast
 
@@ -63,35 +63,49 @@ def build_binary(bd, binary:Binary):
     
     const_true = Const(Type(8, 1), 1)
     const_false = Const(Type(8, 1), 0)
-    if op == '&&':            
-        true = ctx.get_label()
-        false = ctx.get_label()
-        
-        left = ctx.get_label()                
-        lhs = do_build(bd, binary.left)
+    
+    left = ctx.get_label()        
+    right = ctx.get_label()
+    end = ctx.pop_br() if ctx.have_br() else ctx.get_label()
+            
+    if is_logic(binary.left):
+        ctx.push_br(left)
+    else:        
         ctx.add(left)
-        ctx.add(Branch(lhs, true, false))
-        ctx.add(true)
-        rhs = do_build(bd, binary.right)
-        reg = ctx.get_var(rhs.type)
-        ctx.add(false)
-        ctx.add(Phi(reg, [(const_false, false), (rhs, true)]))
-        return reg
+
+    lhs = do_build(bd, binary.left)
+    
+    if op == '&&':                    
+        ctx.add(Branch(lhs, right, end))
         
+        if is_logic(binary.right):
+            ctx.push_br(right)
+        else:
+            ctx.add(right)
+        rhs = do_build(bd, binary.right)        
+        ctx.add(Jump(end))
+
+        ctx.add(end)
+        reg = ctx.get_var(rhs.type)
+        ctx.add(Phi(reg, [(const_false, left), (rhs, right)]))
     if op == '||':
-        true = ctx.get_label()
-        false = ctx.get_label()
+        ctx.add(Branch(lhs, end, right))
         
-        left = ctx.get_label()                
-        lhs = do_build(bd, binary.left)
-        ctx.add(left)
-        ctx.add(Branch(lhs, true, false))
-        ctx.add(false)
-        rhs = do_build(bd, binary.right)
+        if is_logic(binary.right):
+            ctx.push_br(right)
+        else:
+            ctx.add(right)
+        rhs = do_build(bd, binary.right)        
+        ctx.add(Jump(end))
+
+        ctx.add(end)
         reg = ctx.get_var(rhs.type)
-        ctx.add(true)
-        ctx.add(Phi(reg, [(const_true, left), (rhs, false)]))
-        return reg
+        ctx.add(Phi(reg, [(const_true, left), (rhs, right)]))
+
+    return reg
+
+def is_logic(obj):
+    return type(obj) is Binary and obj.oper.text in ['&&', '||']
 
 def build_assign(bd, assign:Assign):
     reg = do_build(bd, assign.left)

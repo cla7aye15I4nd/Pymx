@@ -159,7 +159,7 @@ class Phi:
         self.units = [deepcopy(unit) for unit in units]
 
     def __str__(self):
-        br = ', '.join([f'[ {w[0].name}, @{w[1].label} ]' for w in self.units])
+        br = ', '.join([f'[ {w[0].name}, %{w[1].label} ]' for w in self.units])
         return '  {} = phi {} {}\n'.format(self.reg.name, self.reg.type, br)
 
     def replace(self, table, count, first):

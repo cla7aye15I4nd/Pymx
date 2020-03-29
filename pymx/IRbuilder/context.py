@@ -1,6 +1,8 @@
 import traceback
+from copy import deepcopy
 from ..fakecode.types import Type
 from ..fakecode import Reg, Label, Global
+from ..fakecode.inst import Branch, Jump, Ret
 
 class Context:
     count = 0
@@ -79,18 +81,22 @@ class Context:
     def have_br(self):
         return len(self.branch) > 0
 
-    def push_br(self, true, false):
-        self.branch.append((true, false))
+    def push_br(self, end):
+        self.branch.append(end)
     
     def pop_br(self):
+        res = self.branch[-1]
         self.branch.pop()
-
-    def true_br(self):
-        return self.branch[-1][0]
+        return res
     
-    def false_br(self):
-        return self.branch[-1][1]
-
+    def last_label(self):
+        for inst in self.code[::-1]:
+            if type(inst) is Label:
+                return inst
+            if type(inst) in [Branch, Jump, Ret]:
+                return self.get_label()           
+        return Label(0)
+    
     def add_struct(self, struct):
         self.struct[struct.name] = struct
 

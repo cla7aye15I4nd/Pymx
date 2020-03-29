@@ -1,4 +1,4 @@
-from ..fakecode import Prog, Func, Union, Global, Reg
+from ..fakecode import Prog, Func, Union, Global, Reg, Label
 from ..fakecode.types import cast
 from ..fakecode.inst import Alloca, Store
 
