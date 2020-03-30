@@ -43,46 +43,6 @@ class Func:
         else:
             self.code.append(code)
 
-    def standard(self):
-        table = {}
-        count = len(self.params) + 1
-
-        last = False
-        alloc_code = []
-        other_code = []
-
-        ## cut useless label
-        for inst in self.code:
-            if type(inst) is Alloca:
-                alloc_code.append(inst)
-            else:
-                if type(inst) is Label:
-                    if last:
-                        table[f'%{other_code[-1].label}'] = inst.label
-                    else:
-                        last = True
-                        if (not other_code or 
-                            type(other_code[-1]) not in [Branch, Jump, Ret]):
-                            other_code.append(Jump(inst))
-                        other_code.append(inst)
-                else:
-                    last = False
-                    other_code.append(inst)
-        
-        self.code = alloc_code + other_code
-        for inst in self.code:
-            inst.standard(table, count, False)  
-        
-        ## rename
-        table = {}
-        for i in range(1, count):
-            table[f'%{i}'] = i
-        for inst in self.code:                
-            count += inst.standard(table, count, True)
-        for inst in self.code:
-            inst.standard(table, count, False)  
-        self.code = self.code
-
     def __str__(self):
         params = ', '.join([str(x) for x in self.params])
         code = 'define {} @{}({}) {{\n'.format(self.rtype, self.name, params)
@@ -122,9 +82,10 @@ class Reg:
     def __str__(self):
         return '{} {}'.format(self.type, self.name)
 
-    def standard(self, table):
-        if all(c in string.digits for c in self.name[1:]) and self.name in table:
-            self.name = f'%{table[self.name]}'
+    def __eq__(self, other):
+        if type(other) is not Reg:
+            return False
+        return self.name == other.name
 
 class Label:
     def __init__(self, label):
@@ -152,5 +113,5 @@ class Const:
     def __str__(self):
         return '{} {}'.format(self.type, self.name)
 
-    def standard(self, table):
-        pass
+    def __eq__(self, other):
+        return False
