@@ -5,7 +5,7 @@ from ..fakecode.inst import Alloca, Store
 from ..lexer.tokens import Token
 from ..tree.prog import Program, Function, Struct
 
-from .ssa import ssa_build
+from .SSAbuilder import build_SSA
 from .context import ctx
 from .stmt_builder import *
 from .expr_builder import *
@@ -20,6 +20,8 @@ def build_program(bd, prog:Program) -> Prog:
     obj.vars = build_global_variable(bd, prog)
     func = Func(Type(0, 1), '__init_static')
     func.append(ctx.code)
+    func.append(Ret())
+    
     obj.add_function(func)
 
     for struct in prog.structs.values():
@@ -38,7 +40,7 @@ def build_program(bd, prog:Program) -> Prog:
     for func in prog.functions.values():
         obj.add_function(func.build(bd))
     for func in obj.func:
-        ssa_build(func)        
+        build_SSA(func)
 
     obj.vars += ctx.gvar
     return obj
@@ -71,8 +73,8 @@ def build_function(bd, func:Function) -> Func:
         obj.append(Alloca(ctx.get_var(type, var.var_name.text)))
     
     for i, v in enumerate(func.params):
-        src = ctx.var_map[v.var_name.text]
-        dest = Reg(cast(v.var_type), f'%{i + 1}')
+        dest = ctx.var_map[v.var_name.text]
+        src = Reg(cast(v.var_type), f'%{i + 1}')
         obj.append(Store(src, dest))
     
     func.body.build(bd)
