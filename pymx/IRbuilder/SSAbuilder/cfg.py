@@ -76,6 +76,7 @@ class Block:
         self.label = label
         self.code = []
         self.user = []
+        self.df = []
         
         self.edges = []
         self.head_jump = None

@@ -5,6 +5,7 @@ def build_tree(cfg):
     succ = {}
         
     dfn = {}
+    end = {}
     idx = {}
 
     fa = {}
@@ -22,6 +23,16 @@ def build_tree(cfg):
                 clk = tarjan(v, clk + 1)
         return clk
 
+    def dfs(u, clk):
+        dfn[u] = clk
+        idx[clk] = u        
+        for v in succ[u]:
+            if v not in dfn:
+                anc[v] = u
+                clk = dfs(v, clk + 1)
+        end[u] = clk
+        return clk
+
     def find(u):
         if u == fa[u]:
             return u
@@ -32,6 +43,21 @@ def build_tree(cfg):
             min_node[u] = min_node[x]
         return fa[u]
                     
+    def compute_df(u):
+        df = set()
+        for v in succ[u]:
+            if idom[v] != u:
+                df.add(v)
+        for v in domin[u]:
+            compute_df(v)
+            for w in cfg.block[v].df:
+                if not is_domin(u, w) or u == w:                        
+                    df.add(w)
+        
+        cfg.block[u].df = list(df)
+
+    def is_domin(u, v):
+        return dfn[u] <= dfn[v] <= end[u]
 
     for block in cfg.block.values(): 
         u = block.label
@@ -82,4 +108,8 @@ def build_tree(cfg):
             idom[u] = idom[idom[u]]
         domin[idom[u]].append(u)
 
+    dfn.clear()
+    dfs(0, 1)
+
+    compute_df(0)
     return domin
