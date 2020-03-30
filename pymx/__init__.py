@@ -27,7 +27,8 @@ def get_arguments():
     )
 
     parser.add_argument('files', metavar='files', nargs="+")
-    parser.add_argument('-c', dest='syntax_only', action='store_true')
+    parser.add_argument('-d', dest='debug', action='store_true')
+    parser.add_argument('-c', dest='syntax_only', action='store_true')    
     parser.add_argument('-l', dest='ir_file')
     return parser.parse_args()
 
@@ -51,12 +52,12 @@ def process_file(args):
     if not error_collector.ok() or args.syntax_only:
         return None
 
-    ir = IRbuild(tree)
+    ir = IRbuild(tree, args)
 
     if args.ir_file:
         write_file(args.ir_file, ir.__str__())
-    else:
-        write_file(os.path.splitext(os.path.basename(file))[0] + '.ll', ir.__str__())
+    if args.debug:
+        pass    
     
 
 def write_file(file, text):

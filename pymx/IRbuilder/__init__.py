@@ -1,8 +1,12 @@
 """ IRbuilder """
 
-from .context import ctx
 from . import builder
+from .context import ctx
+from .SSAbuilder import build_SSA
 
-def IRbuild(tree):
+def IRbuild(tree, args):
     ctx.clear()
-    return tree.build(builder)
+    obj = tree.build(builder)
+    for func in obj.func:
+        build_SSA(func, args)
+    return obj
