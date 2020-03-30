@@ -46,7 +46,6 @@ def eliminate_alloc(cfg):
         else:
             flag = False
 
-
 def eliminate_useless_jump(cfg):
     flag = False
     for block in cfg.block.values():
@@ -143,7 +142,6 @@ def promote_single_store_alloc(cfg, alloc, bk):
         cfg.block[bk].code.remove(inst)
     for _, inst in alloc.store:
         cfg.block[bk].code.remove(inst)
-
 
 def replace(inst, replace_hook):
     if type(inst) is Store:

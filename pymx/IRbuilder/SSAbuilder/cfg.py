@@ -77,21 +77,28 @@ class Block:
         self.code = []
         self.user = []
         
+        self.edges = []
         self.head_jump = None
         self.tail_jump = None
 
     def load_edge(self):
         head = self.code[0]
         tail = self.code[-1]
+        self.edges = []
         self.head_jump = None
         self.tail_jump = None
 
         if type(head) is Jump:
             self.head_jump = head.label.label
         if type(tail) is Jump:
+            self.edges = [tail.label.label]
             self.tail_jump = tail.label.label
-            
-        
+        elif type(tail) is Branch:
+            self.edges = [tail.true.label, tail.false.label]
+
+    def __str__(self):
+        return '|'.join([inst.__str__() for inst in self.code])        
+                 
     def add_user(self, user):
         self.user.append(user)
 
@@ -103,7 +110,7 @@ class Block:
             return self.code[-1]
         return None
 
-def build_CFG(code):
+def build_CFG(code, args):
     cfg = CFG()
     block = Block(0)
     for inst in code:
