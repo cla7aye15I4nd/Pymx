@@ -14,13 +14,16 @@ def build_block(bd, block:Block):
 def build_if(bd, if_:If):
     then_label = ctx.get_label()
     else_label = ctx.get_label()
+    end_label  = ctx.get_label()
 
     reg = do_build(bd, if_.cond)
     ctx.add(Branch(reg, then_label, else_label))
     ctx.add(then_label)
     do_build(bd, if_.if_body)
+    ctx.add(Jump(end_label))
     ctx.add(else_label)
     do_build(bd, if_.else_body)
+    ctx.add(end_label)
 
 def build_for(bd, for_:For):
     do_build(bd, for_.init)
