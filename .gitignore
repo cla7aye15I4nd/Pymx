@@ -137,3 +137,4 @@ tests/
 
 sample.ll
 codegen.bash
+copy.ll
