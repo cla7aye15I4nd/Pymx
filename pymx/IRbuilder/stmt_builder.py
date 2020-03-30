@@ -35,7 +35,7 @@ def build_for(bd, for_:For):
         reg = do_build(bd, for_.cond)
         ctx.add(Branch(reg, then, tail))
     else:
-        ctx.add(Jump(end))
+        ctx.add(Jump(then))
 
     ctx.add(then)
     do_build(bd, for_.body)
