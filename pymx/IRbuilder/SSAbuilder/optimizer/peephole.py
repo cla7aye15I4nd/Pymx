@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pymx.fakecode.inst import (
         Jump, Branch, Phi, Store, Load,
         Arith, Logic, Call, Malloc, Ret
@@ -47,26 +48,40 @@ def eliminate_alloc(cfg):
             flag = False
 
 def eliminate_useless_jump(cfg):
+    def replace_phi_label(label, src, tar):        
+        print(label, src, tar)
+        for phi in cfg.block[tar].code:
+            if type(phi) is not Phi:
+                continue            
+            for unit in phi.units:
+                if unit[1].label == label:                    
+                    unit[1].label = src
+    
     flag = False
     for block in cfg.block.values():
-        for inst in block.code:
-            if type(inst) is Branch:
-                tar_t = cfg.block[inst.true.label].head_jump
-                tar_f = cfg.block[inst.false.label].head_jump
-                
-                if tar_t is not None:
-                    flag = True
-                    inst.true.label = tar_t                    
-                if tar_f is not None:
-                    flag = True
-                    inst.false.label = tar_f
+        src = block.label
+        inst = block.code[-1]        
+        if type(inst) is Branch:
+            tar_t = cfg.block[inst.true.label].head_jump
+            tar_f = cfg.block[inst.false.label].head_jump
             
-            if type(inst) is Jump:
-                tar = cfg.block[inst.label.label].head_jump
-                
-                if tar is not None:
-                    flag = True
-                    inst.label.label = tar
+            if tar_t is not None:
+                flag = True                
+                replace_phi_label(inst.true.label, src, tar_t)
+                inst.true.label = tar_t
+            if tar_f is not None:
+                flag = True                
+                replace_phi_label(inst.false.label, src, tar_f)
+                inst.false.label = tar_f
+        
+        if type(inst) is Jump:
+            tar = cfg.block[inst.label.label].head_jump
+            
+            if tar is not None:
+                flag = True                                
+                replace_phi_label(inst.label.label, src, tar)
+                inst.label.label = tar # src -> tar
+                    
     return flag
 
 def erase_userless_block(cfg):
@@ -111,7 +126,7 @@ def rewrite_single_store_alloc(cfg, alloc, bk, store):
     val = store.src
 
     def replace_hook(reg):
-        return val if reg in rp else reg
+        return deepcopy(val) if reg in rp else reg
     
     for bk, inst in alloc.load:
         rp.append(inst.dst)
@@ -127,7 +142,7 @@ def promote_single_store_alloc(cfg, alloc, bk):
     rp = {}
     val = None
     def replace_hook(reg):
-        return rp[reg.name] if reg.name in rp else reg
+        return deepcopy(rp[reg.name]) if reg.name in rp else reg
     
     code = cfg.block[bk].code
     for inst in code:
