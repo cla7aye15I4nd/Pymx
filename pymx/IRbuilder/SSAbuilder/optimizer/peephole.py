@@ -64,22 +64,25 @@ def eliminate_useless_jump(cfg):
             tar_t = cfg.block[inst.true.label].head_jump
             tar_f = cfg.block[inst.false.label].head_jump
             
-            if tar_t is not None:
+            if tar_t is not None and tar_t not in block.edges:
                 flag = True                
                 replace_phi_label(inst.true.label, src, tar_t)
                 inst.true.label = tar_t
-            if tar_f is not None:
+                block.edges.append(tar_t)
+            if tar_f is not None and tar_f not in block.edges:
                 flag = True                
                 replace_phi_label(inst.false.label, src, tar_f)
                 inst.false.label = tar_f
+                block.edges.append(tar_f)
         
         if type(inst) is Jump:
             tar = cfg.block[inst.label.label].head_jump
             
-            if tar is not None:
+            if tar is not None and tar not in block.edges:
                 flag = True                                
                 replace_phi_label(inst.label.label, src, tar)
                 inst.label.label = tar # src -> tar
+                block.edges.append(tar)
                     
     return flag
 
