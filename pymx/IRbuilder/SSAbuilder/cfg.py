@@ -1,20 +1,31 @@
 from copy import deepcopy
-from pymx.fakecode import Label
-from pymx.fakecode.inst import Alloca, Ret, Load, Store
-from pymx.fakecode.inst import Branch, Jump, Phi
+from pymx.fakecode import Label, Reg
+from pymx.fakecode.inst import Alloca, Ret, Load, Store, Call, Malloc
+from pymx.fakecode.inst import Branch, Jump, Phi, Arith, Logic
 
 class CFG:
     def __init__(self):
         self.defs = {}
         self.block = {}
         self.order = []
+        self.count = 0
 
     def add_defs(self, defs):
         self.defs[defs.dst.name] = defs
+        self.count = max(self.count, int(defs.dst.name[1:]))
     
     def add_block(self, block):        
         self.order.append(block.label)
         self.block[block.label] = block
+        self.count = max(self.count, block.label)
+        for inst in block.code:
+            if inst.dest():
+                self.count = max(self.count, int(inst.dest().name[1:]))
+
+    def get_var(self, var):
+        reg = Reg(var.dst.type, f'%{self.count + 1}')
+        self.count += 1
+        return reg
 
     def compute_label_ref(self):        
         for block in self.block.values():
@@ -53,6 +64,56 @@ class CFG:
                     if name in self.defs: # global
                         self.defs[name].add_load((block.label, inst))
 
+    def compte_load_ref(self):
+        instance = {}
+
+        def place_inst(inst, attr):
+            if type(inst) in [Call, Malloc]:
+                tar = inst.params[attr]
+            elif type(inst) is Phi:
+                tar = inst.units[attr][0]
+            else:
+                tar = getattr(inst, attr)
+
+            if tar:
+                key = tar.name
+                if key in instance:                    
+                    instance[key].add_user((inst, attr))
+
+        for block in self.block.values():
+            for inst in block.code:
+                if type(inst) is Load:
+                    instance[inst.dst.name] = inst
+        
+        for block in self.block.values():
+            for inst in block.code:
+                if type(inst) is Store:
+                    place_inst(inst, 'src')
+                if type(inst) is Branch:
+                    place_inst(inst, 'var')                    
+                if type(inst) is Ret:                    
+                    place_inst(inst, 'reg')                    
+                if type(inst) in [Arith, Logic]:
+                    place_inst(inst, 'lhs')
+                    place_inst(inst, 'rhs')                    
+
+                if type(inst) in [Call, Malloc]:
+                    for i in range(len(inst.params)):
+                        place_inst(inst, i)
+                
+                if type(inst) is Phi:
+                    for i in range(len(inst.units)):
+                        place_inst(inst, i)                    
+
+    def compute_graph(self):
+        for block in self.block.values():
+            block.preds = []
+            block.load_edge()
+
+        for block in self.block.values():
+            for succ in block.edges:
+                self.block[succ].preds.append(block.label)
+
     def add_label_ref(self, user, label):
         self.block[label].add_user(user)
     
@@ -78,6 +139,7 @@ class Block:
         self.user = []
         self.df = []
         
+        self.preds = []
         self.edges = []
         self.head_jump = None
         self.tail_jump = None
@@ -114,17 +176,23 @@ class Block:
 def build_CFG(code, args):
     cfg = CFG()
     block = Block(0)
+
+    flag = True
     for inst in code:
         if type(inst) is Alloca:
             cfg.add_defs(inst)
         elif type(inst) is Label:
+            flag = True
             if (type(block.last_inst()) not in
                     [Branch, Jump, Ret]):
                 block.add_inst(Jump(inst))
             cfg.add_block(block)
             block = Block(inst.label)
         else:
-            block.add_inst(inst)
+            if flag:
+                block.add_inst(inst)
+            if type(inst) is Ret:
+                flag = False
     
     cfg.add_block(block)
     return cfg

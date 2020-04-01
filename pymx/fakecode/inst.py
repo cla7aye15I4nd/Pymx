@@ -37,9 +37,13 @@ class Load(Base):
     def __init__(self, src, dst):
         self.src = deepcopy(src)
         self.dst = deepcopy(dst)
+        self.user = [] # using shadow copy
 
     def __str__(self):
         return '  {} = load {}, {}, align {}\n'.format(self.dst.name, self.src.type, self.src, self.src.type.align)
+
+    def add_user(self, user):
+        self.user.append(user)
 
 class Branch(Base):
     def __init__(self, var, true, false):
