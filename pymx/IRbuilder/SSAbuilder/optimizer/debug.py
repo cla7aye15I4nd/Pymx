@@ -21,8 +21,12 @@ def print_cfg(cfg):
 def print_domin(domin):
     with open('domin.dot', 'w') as f:
         f.write('digraph cfg{\n')
-        for u in domin:
-            for v in domin[u]:
+        for u in domin.succ:
+            for v in domin.succ[u]:
                 f.write(f'  {u}->{v}\n')
         f.write('}')
     os.system('dot -Tpng domin.dot -o domin.png')
+
+def print_df(cfg):
+    for block in cfg.block.values():
+        print(block.label, block.df)
