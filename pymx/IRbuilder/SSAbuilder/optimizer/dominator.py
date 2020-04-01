@@ -1,18 +1,41 @@
-def build_tree(cfg):
-    domin = {}
-    tree = {}
-    prev = {}
-    succ = {}
-        
-    dfn = {}
-    end = {}
-    idx = {}
+class DomTree:
+    def __init__(self, succ):
+        self.succ = succ
+        self.analysis()
+    
+    def dfs(self, u, clk, level):
+        self.dfn[u] = clk
+        self.level[u] = level
+        for v in self.succ[u]:
+            if v not in self.dfn:
+                clk = self.dfs(v, clk + 1, level + 1)
+        return clk
 
-    fa = {}
-    anc = {}
-    idom = {}
-    semi = {}
-    min_node = {}
+    def analysis(self):        
+        self.dfn  = {}
+        self.level = {}
+        self.dfs_clock = self.dfs(0, 1, 1)
+
+    def get(self, x):
+        if x in self.dfn:
+            return Node(x, self.dfn[x], self.level[x])
+        return None
+
+class Node:
+    def __init__(self, x, level, dfn):
+        self.x = x
+        self.dfn = dfn
+        self.level = level
+
+    def __lt__(self, other):
+        if self.level > other.level:
+            return True
+        return self.dfn > other.dfn
+
+def build_tree(cfg):
+    dfn, end, idx = {}, {}, {}
+    domin, tree, prev, succ = {}, {}, {}, {}
+    fa, anc, idom, semi, min_node = {}, {}, {}, {}, {}
 
     def tarjan(u, clk):        
         dfn[u] = clk
@@ -110,6 +133,6 @@ def build_tree(cfg):
 
     dfn.clear()
     dfs(0, 1)
-
     compute_df(0)
-    return domin
+
+    return DomTree(domin)
