@@ -49,7 +49,6 @@ def eliminate_alloc(cfg):
 
 def eliminate_useless_jump(cfg):
     def replace_phi_label(label, src, tar):        
-        print(label, src, tar)
         for phi in cfg.block[tar].code:
             if type(phi) is not Phi:
                 continue            
