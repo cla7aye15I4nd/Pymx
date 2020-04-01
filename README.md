@@ -23,13 +23,12 @@ int main() {
 ### Optimization process
 
 #### No Opt
-
-![](doc/sample/no_opt.png)
+<img src="doc/sample/no_opt.png" width = "600px"/>
 
 #### Peephole
 
-![](doc/sample/peephole.png)
+<img src="doc/sample/peephole.png" width = "600px"/>
 
 #### Mem2Reg
 
-![](doc/sample/mem2reg.png)
+<img src="doc/sample/mem2reg.png" width = "600px"/>
