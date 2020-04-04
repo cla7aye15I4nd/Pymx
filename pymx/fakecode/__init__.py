@@ -1,7 +1,6 @@
 """ fake code like llvm """
 
 import string
-from .inst import Alloca, Branch, Jump, Ret
 
 class Prog:
     def __init__(self):
@@ -16,8 +15,13 @@ class Prog:
         self.struct.append(struct)
 
     def __str__(self):
-        code = ''
-        
+        code = (
+            "declare i32 @getInt()\n"
+            "declare void @print(i8*)\n"
+            "declare i32 @__malloc(i32)\n"
+            "\n"
+        )
+
         for var in self.vars:
             code += var.__str__()
         code += '\n'
@@ -87,6 +91,9 @@ class Reg:
             return False
         return self.name == other.name
 
+    def is_value(self, value):
+        return False
+
 class Label:
     def __init__(self, label):
         self.label = label
@@ -102,8 +109,11 @@ class Label:
                 self.label = table[f'%{self.label}']
         return 1
 
-    def replace_reg(self, table):
-        pass
+    def __eq__(self, other):
+        return self.label == other.label
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class Const:
     def __init__(self, type, name):
@@ -115,3 +125,6 @@ class Const:
 
     def __eq__(self, other):
         return False
+
+    def is_value(self, value):
+        return self.name == value
