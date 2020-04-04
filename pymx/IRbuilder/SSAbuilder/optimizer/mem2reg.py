@@ -34,19 +34,19 @@ def rename_pass(cfg, phi_map):
                 phi = phi_map[alloc][u]
                 phi.units.append((deepcopy(incoming_vals[alloc]), Label(pred)))
     
-    def handle_inst(block, incoming_vals, incoming_phi):
+    def handle_inst(block, incoming_vals):
         if block.label in block_phi:
             for name in block_phi[block.label]:
                 phi = phi_map[name][block.label]
-                incoming_phi[name] = phi.dest()
+                incoming_vals[name] = phi.dest()                
 
         for inst in list(block.code):
             if type(inst) is Load:
                 src = inst.src.name
-                if src not in incoming_phi:
+                if src not in incoming_vals:
                     continue
 
-                val = incoming_phi[src]
+                val = incoming_vals[src]
                 block.code.remove(inst)                
                 for body, attr in inst.user:
                     if type(body) in [Call, Malloc]:
@@ -54,8 +54,7 @@ def rename_pass(cfg, phi_map):
                     elif type(inst) is Phi:
                         body.units[attr][0] = deepcopy(val)
                     else:
-                        setattr(body, attr, deepcopy(val))
-                # TODO
+                        setattr(body, attr, deepcopy(val))                
 
             if type(inst) is Store:
                 dst = inst.dst.name
@@ -65,7 +64,7 @@ def rename_pass(cfg, phi_map):
                 incoming_vals[dst] = inst.src
                 block.code.remove(inst)
     
-    def _rename_pass(u, pred, incoming_vals, incoming_phi):
+    def _rename_pass(u, pred, incoming_vals):
         visit_succ = set()
         while True:
             handle_phi(u, pred)
@@ -73,23 +72,28 @@ def rename_pass(cfg, phi_map):
                 return
             
             visited.add(u)
-            handle_inst(cfg.block[u], incoming_vals, incoming_phi)
+            handle_inst(cfg.block[u], incoming_vals)
 
             pred = u
+            next_node = None            
             for i, v in enumerate(cfg.block[u].edges):
                 if i == 0:
-                    u = v
+                    next_node = v
                 elif v not in visit_succ:
                     visit_succ.add(v)
-                    work_list.append((v, u, deepcopy(incoming_vals), deepcopy(incoming_phi)))
+                    work_list.append((v, pred, deepcopy(incoming_vals)))
+            
+            if next_node is None:
+                return
+            u = next_node
     
     cfg.compte_load_ref()
     incoming_vals = {key : Const(cfg.defs[key].dst.type, 0) for key in phi_map}
-    work_list.append((0, None, deepcopy(incoming_vals), {}))
+    work_list.append((0, None, deepcopy(incoming_vals)))
 
     while work_list:
-        u, pred, incoming_vals, incoming_phi = work_list.pop()
-        _rename_pass(u, pred, incoming_vals, incoming_phi)
+        u, pred, incoming_vals = work_list.pop()
+        _rename_pass(u, pred, incoming_vals)
 
     for alloc in phi_map:
         for blk in phi_map[alloc]:
