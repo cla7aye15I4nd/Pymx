@@ -1,6 +1,8 @@
 from copy import deepcopy
 
+from . import Const
 from ..parser.operators import arith, logic
+from ..parser.operators import arith_compute, logic_compute
 
 class Base:
     def dest(self):
@@ -8,6 +10,12 @@ class Base:
             return None
         if hasattr(self, 'dst'):
             return getattr(self, 'dst')        
+        return None
+
+    def compute(self):
+        return None
+
+    def to_jump(self):
         return None
 
 class Alloca(Base):
@@ -52,7 +60,12 @@ class Branch(Base):
         self.false = deepcopy(false)
 
     def __str__(self):
-        return '  br {}, label %{}, label %{}\n'.format(self.var, self.true.label, self.false.label)
+        return '  br i1 {}, label %{}, label %{}\n'.format(self.var.name, self.true.label, self.false.label)
+
+    def to_jump(self):
+        if type(self.var) is Const:
+            return self.true if self.var.name else self.false
+        return None
 
 class Jump(Base):
     def __init__(self, label):
@@ -78,7 +91,23 @@ class Arith(Base):
         self.oper = arith[oper]
 
     def __str__(self):
-        return '  {} = {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)
+        return '  {} = {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)    
+
+    def compute(self):
+        if type(self.lhs) is Const and type(self.rhs) is Const:
+            return Const(self.dst.type, arith_compute(self.oper, self.lhs.name, self.rhs.name))
+        if self.oper == arith['+']:
+            if self.lhs.is_value(0):
+                return self.rhs
+            if self.rhs.is_value(0):
+                return self.lhs
+
+        if self.oper == arith['-']:
+            if self.lhs.is_value(1):
+                return self.rhs
+            if self.rhs.is_value(1):
+                return self.lhs
+        return None
 
 class Logic(Base):
     def __init__(self, dst, oper, lhs, rhs):
@@ -89,6 +118,11 @@ class Logic(Base):
 
     def __str__(self):
         return '  {} = icmp {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)
+
+    def compute(self):
+        if type(self.lhs) is Const and type(self.rhs) is Const:
+            return Const(self.dst.type, logic_compute(self.oper, self.lhs.name, self.rhs.name))
+        return None        
 
 class Call(Base):
     def __init__(self, dst, name, params):
