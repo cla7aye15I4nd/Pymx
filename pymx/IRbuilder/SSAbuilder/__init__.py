@@ -7,4 +7,4 @@ def build_SSA(func, args):
     cfg = build_CFG(func.code, args)
     
     optimize(cfg, args)
-    func.code = cfg.serial()
+    func.code = cfg.serial(len(func.params))

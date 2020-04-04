@@ -124,11 +124,55 @@ class CFG:
     def remove_alloc(self, alloc):
         self.defs.pop(alloc.dst.name)
 
-    def serial(self):
+    def serial(self, count=0):        
+        table = {f'%{i + 1}' : i for i in range(count)}
+
+        def replace_hook(obj):
+            if type(obj) is Reg and obj.name in table:
+                return Reg(obj.type, f'%{table[obj.name]}')
+            if type(obj) is Label:
+                return Label(table[f'%{obj.label}'])
+            return obj
+
+        for label in self.order:            
+            table[f'%{label}'] = count
+            count += 1
+            for inst in self.block[label].code:
+                dst = inst.dest()
+                if dst:                    
+                    table[dst.name] = count                    
+                    dst.name = f'%{count}'
+                    count += 1
+        
         code = list(self.defs.values())
         for label in self.order:
-            code.append(Label(label))
-            code += self.block[label].code
+            code.append(Label(table[f'%{label}']))
+            for inst in self.block[label].code:
+                if type(inst) is Store:
+                    inst.src = replace_hook(inst.src)
+                    inst.dst = replace_hook(inst.dst)
+                if type(inst) is Load:
+                    inst.src = replace_hook(inst.src)                    
+
+                if type(inst) is Branch:
+                    inst.var = replace_hook(inst.var)
+                    inst.true = replace_hook(inst.true)
+                    inst.false = replace_hook(inst.false)
+                if type(inst) is Jump:
+                    inst.label = replace_hook(inst.label)
+                
+                if type(inst) is Ret:
+                    inst.reg = replace_hook(inst.reg)                
+                if type(inst) in [Arith, Logic]:
+                    inst.lhs = replace_hook(inst.lhs) 
+                    inst.rhs = replace_hook(inst.rhs)
+
+                if type(inst) in [Call, Malloc]:
+                    inst.params = [replace_hook(par) for par in inst.params]
+                
+                if type(inst) is Phi:
+                    inst.units = [(replace_hook(unit[0]), replace_hook(unit[1])) for unit in inst.units]
+                code.append(inst)
         
         return code
 
