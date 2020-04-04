@@ -67,11 +67,13 @@ def build_while(bd, while_:While):
     
     ctx.exit_loop()
 
-def build_break(bd, break_:Break):
+def build_break(bd, break_:Break):    
     ctx.add(Jump(ctx.break_label()))
+    ctx.add(ctx.get_label())
 
-def build_continue(bd, continue_:Continue):
+def build_continue(bd, continue_:Continue):    
     ctx.add(Jump(ctx.continue_label()))
+    ctx.add(ctx.get_label())
 
 def build_return(bd, return_:Return):
     if return_.expr:
