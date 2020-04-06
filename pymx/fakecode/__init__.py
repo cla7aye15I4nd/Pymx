@@ -15,13 +15,8 @@ class Prog:
         self.struct.append(struct)
 
     def __str__(self):
-        code = (
-            "declare i32 @getInt()\n"
-            "declare void @print(i8*)\n"
-            "declare i32 @__malloc(i32)\n"
-            "\n"
-        )
-
+        code = ""
+        
         for var in self.vars:
             code += var.__str__()
         code += '\n'
