@@ -3,12 +3,14 @@ from pymx.fakecode import Label, Reg
 from pymx.fakecode.inst import Alloca, Ret, Load, Store, Call, Malloc
 from pymx.fakecode.inst import Branch, Jump, Phi, Arith, Logic
 
-class CFG:
+class CFG:    
     def __init__(self):
         self.defs = {}
+        self.gvar = {}
         self.block = {}
         self.order = []
         self.count = 0
+        self.par_cnt = 0
 
     def add_defs(self, defs):
         self.defs[defs.dst.name] = defs
@@ -23,7 +25,7 @@ class CFG:
                 self.count = max(self.count, int(inst.dest().name[1:]))
 
     def get_var(self, var):
-        reg = Reg(var.dst.type, f'%{self.count + 1}')
+        reg = Reg(var.type, f'%{self.count + 1}')
         self.count += 1
         return reg
 
@@ -51,6 +53,7 @@ class CFG:
         for key in self.defs:
             self.defs[key].load.clear()
             self.defs[key].store.clear()
+        self.gvar.clear()
         
         for block in self.block.values():
             for inst in block.code:
@@ -58,11 +61,19 @@ class CFG:
                     name = inst.dst.name
                     if name in self.defs: # global
                         self.defs[name].add_store((block.label, inst))
+                    elif inst.dst.is_global():
+                        if name not in self.gvar:
+                            self.gvar[name] = GlobalRef(name)
+                        self.gvar[name].add_store((block.label, inst))
                 
                 if type(inst) is Load:
                     name = inst.src.name
                     if name in self.defs: # global
                         self.defs[name].add_load((block.label, inst))
+                    elif inst.src.is_global():
+                        if name not in self.gvar:
+                            self.gvar[name] = GlobalRef(name)
+                        self.gvar[name].add_load((block.label, inst))
 
     def compte_load_ref(self):
         instance = {}
@@ -124,7 +135,8 @@ class CFG:
     def remove_alloc(self, alloc):
         self.defs.pop(alloc.dst.name)
 
-    def serial(self, count=0):        
+    def _serial(self):        
+        count = self.par_cnt
         table = {f'%{i + 1}' : i for i in range(count)}
 
         def replace_hook(obj):
@@ -134,8 +146,13 @@ class CFG:
                 return Label(table[f'%{obj.label}'])
             return obj
 
+        order = []
+        block = {}
         for label in self.order:            
             table[f'%{label}'] = count
+            block[count] = self.block[label]
+            block[count].label = count
+            order.append(count)
             count += 1
             for inst in self.block[label].code:
                 dst = inst.dest()
@@ -144,9 +161,9 @@ class CFG:
                     dst.name = f'%{count}'
                     count += 1
         
-        code = list(self.defs.values())
-        for label in self.order:
-            code.append(Label(table[f'%{label}']))
+        self.order = order
+        self.block = block
+        for label in self.order:            
             for inst in self.block[label].code:
                 if type(inst) is Store:
                     inst.src = replace_hook(inst.src)
@@ -172,8 +189,13 @@ class CFG:
                 
                 if type(inst) is Phi:
                     inst.units = [(replace_hook(unit[0]), replace_hook(unit[1])) for unit in inst.units]
-                code.append(inst)
-        
+        self.compute_graph()
+
+    def serial(self):
+        code = list(self.defs.values())
+        for label in self.order:
+            code.append(Label(label))
+            code += self.block[label].code
         return code
 
 class Block:
@@ -217,8 +239,23 @@ class Block:
             return self.code[-1]
         return None
 
-def build_CFG(code, args):
+class GlobalRef:
+    def __init__(self, name):
+        self.name = name
+        self.load = []
+        self.store = []
+
+    def add_load(self, load):
+        self.load.append(load)
+
+    def add_store(self, store):
+        self.store.append(store)
+
+def build_CFG(func, args):
     cfg = CFG()
+    cfg.par_cnt = len(func.params)
+
+    code = func.code
     block = Block(0)
 
     flag = True
