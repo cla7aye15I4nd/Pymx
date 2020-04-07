@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pymx.fakecode import Label
 from pymx.fakecode.inst import (
         Jump, Branch, Phi, Store, Load,
         Arith, Logic, Call, Malloc, Ret
@@ -6,7 +7,7 @@ from pymx.fakecode.inst import (
 
 def optimize(cfg):
     control_flow_optimize(cfg)
-    eliminate_alloc(cfg)
+    eliminate_alloc(cfg)    
     return cfg
 
 def control_flow_optimize(cfg):
@@ -19,7 +20,7 @@ def control_flow_optimize(cfg):
         if not flag:
             flag = eliminate_useless_jump(cfg)
         if not flag:
-            flag = erase_userless_block(cfg)
+            flag = erase_useless_block(cfg)
         if not flag:
             flag = combine_block(cfg)
 
@@ -35,7 +36,7 @@ def eliminate_alloc(cfg):
                     cfg.block[bk].code.remove(inst)
                 break
             if len(alloc.store) == 1:
-                bk, store = alloc.store[0]            
+                bk, store = alloc.store[0]
                 rewrite_single_store_alloc(cfg, alloc, bk, store)
                 break
 
@@ -64,16 +65,44 @@ def eliminate_useless_jump(cfg):
             tar_t = cfg.block[inst.true.label].head_jump
             tar_f = cfg.block[inst.false.label].head_jump
             
-            if tar_t is not None and tar_t not in block.edges:
-                flag = True                
-                replace_phi_label(inst.true.label, src, tar_t)
-                inst.true.label = tar_t
-                block.edges.append(tar_t)
-            if tar_f is not None and tar_f not in block.edges:
-                flag = True                
-                replace_phi_label(inst.false.label, src, tar_f)
-                inst.false.label = tar_f
-                block.edges.append(tar_f)
+            if tar_t:
+                if tar_t in block.edges:                    
+                    for cmd in cfg.block[tar_t].code:
+                        if (type(cmd) is Phi and 
+                                any(unit[1] == inst.true for unit in cmd.units)):
+                            break
+                    else:
+                        flag = True
+                        block.code[-1] = Jump(Label(tar_t))
+                        block.edges = [tar_t]
+                        block.tail_jump = tar_t                        
+                        if len(block.code) == 1:
+                            block.head_jump = tar_t                            
+                        continue
+                else:
+                    flag = True                
+                    replace_phi_label(inst.true.label, src, tar_t)
+                    inst.true.label = tar_t
+                    block.edges.append(tar_t)
+            if tar_f:
+                if tar_f in block.edges:
+                    for cmd in cfg.block[tar_f].code:
+                        if (type(cmd) is Phi and 
+                                any(unit[1] == inst.false for unit in cmd.units)):
+                            break
+                    else:
+                        flag = True
+                        block.code[-1] = Jump(Label(tar_f))
+                        block.edges = [tar_f]
+                        block.tail_jump = tar_f
+                        if len(block.code) == 1:
+                            block.head_jump = tar_f
+                        continue
+                else:
+                    flag = True                
+                    replace_phi_label(inst.false.label, src, tar_f)
+                    inst.false.label = tar_f
+                    block.edges.append(tar_f)                    
         
         if type(inst) is Jump:
             tar = cfg.block[inst.label.label].head_jump
@@ -82,11 +111,13 @@ def eliminate_useless_jump(cfg):
                 flag = True                                
                 replace_phi_label(inst.label.label, src, tar)
                 inst.label.label = tar # src -> tar
-                block.edges.append(tar)
+                block.edges = [tar]
+                if len(block.code) == 1:
+                    block.head_jump = tar
                     
     return flag
 
-def erase_userless_block(cfg):
+def erase_useless_block(cfg):
     flag = False
     for block in list(cfg.block.values()):
         if not block.user:
@@ -162,6 +193,8 @@ def promote_single_store_alloc(cfg, alloc, bk):
 
 def replace(inst, replace_hook):
     if type(inst) is Store:
+        inst.src = replace_hook(inst.src)
+    if type(inst) is Load:
         inst.src = replace_hook(inst.src)
     if type(inst) is Branch:
         inst.var = replace_hook(inst.var)
