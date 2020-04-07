@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from . import Const
+from . import Const, Reg
 from ..parser.operators import arith, logic
 from ..parser.operators import arith_compute, logic_compute
 
@@ -11,6 +11,9 @@ class Base:
         if hasattr(self, 'dst'):
             return getattr(self, 'dst')        
         return None
+
+    def depend(self):
+        return []
 
     def compute(self):
         return None
@@ -53,6 +56,11 @@ class Load(Base):
     def add_user(self, user):
         self.user.append(user)
 
+    def depend(self):
+        if type(self.src) is Reg:
+            return [self.src.name]
+        return []
+
 class Branch(Base):
     def __init__(self, var, true, false):
         self.var = deepcopy(var)
@@ -60,12 +68,17 @@ class Branch(Base):
         self.false = deepcopy(false)
 
     def __str__(self):
-        return '  br i1 {}, label %{}, label %{}\n'.format(self.var.name, self.true.label, self.false.label)
+        return '  br {}, label %{}, label %{}\n'.format(self.var, self.true.label, self.false.label)
 
     def to_jump(self):
         if type(self.var) is Const:
             return self.true if self.var.name else self.false
         return None
+
+    def depend(self):
+        if type(self.var) is Reg:
+            return [self.var.name]
+        return []
 
 class Jump(Base):
     def __init__(self, label):
@@ -82,6 +95,11 @@ class Ret(Base):
         if self.reg:
             return '  ret {}\n'.format(self.reg)
         return '  ret void\n'
+
+    def depend(self):
+        if type(self.reg) is Reg:
+            return [self.reg.name]
+        return []
 
 class Arith(Base):
     def __init__(self, dst, oper, lhs, rhs):
@@ -102,19 +120,41 @@ class Arith(Base):
             if self.rhs.is_value(0):
                 return self.lhs
 
-        if self.oper == arith['-']:
+        if self.oper == arith['*']:
             if self.lhs.is_value(1):
                 return self.rhs
             if self.rhs.is_value(1):
                 return self.lhs
+            if self.lhs.is_value(0) or self.rhs.is_value(0):
+                return Const(self.dst.type, 0)
+        if self.oper == arith['-']:
+            if self.lhs == self.rhs:
+                return Const(self.dst.type, 0)
         return None
+
+    def depend(self):
+        dep = []
+        if type(self.lhs) is Reg:
+            dep.append(self.lhs.name)
+        if type(self.rhs) is Reg:
+            dep.append(self.rhs.name)
+        return dep
 
 class Logic(Base):
     def __init__(self, dst, oper, lhs, rhs):
         self.dst = deepcopy(dst)
-        self.lhs = deepcopy(lhs)
-        self.rhs = deepcopy(rhs)
-        self.oper = logic[oper]
+        if oper == '>':
+            self.lhs = deepcopy(rhs)
+            self.rhs = deepcopy(lhs)
+            self.oper = logic['<']
+        elif oper == '>=':
+            self.lhs = deepcopy(rhs)
+            self.rhs = deepcopy(lhs)
+            self.oper = logic['<=']
+        else:
+            self.lhs = deepcopy(lhs)
+            self.rhs = deepcopy(rhs)
+            self.oper = logic[oper]
 
     def __str__(self):
         return '  {} = icmp {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)
@@ -122,7 +162,15 @@ class Logic(Base):
     def compute(self):
         if type(self.lhs) is Const and type(self.rhs) is Const:
             return Const(self.dst.type, logic_compute(self.oper, self.lhs.name, self.rhs.name))
-        return None        
+        return None
+
+    def depend(self):
+        dep = []
+        if type(self.lhs) is Reg:
+            dep.append(self.lhs.name)
+        if type(self.rhs) is Reg:
+            dep.append(self.rhs.name)
+        return dep
 
 class Call(Base):
     def __init__(self, dst, name, params):
@@ -137,6 +185,13 @@ class Call(Base):
         else:
             return '  call void @{}({})\n'.format(self.name, params)
 
+    def depend(self):
+        dep = []
+        for par in self.params:
+            if type(par) is Reg:
+                dep.append(par.name)
+        return dep
+
 class Malloc(Call):
     def __init__(self, dst, par):
         super().__init__(dst, '__malloc', [par])
@@ -149,3 +204,10 @@ class Phi(Base):
     def __str__(self):
         br = ', '.join([f'[ {w[0].name}, %{w[1].label} ]' for w in self.units])
         return '  {} = phi {} {}\n'.format(self.dst.name, self.dst.type, br)
+
+    def depend(self):
+        dep = []
+        for unit in self.units:
+            if type(unit[0]) is Reg:
+                dep.append(unit[0].name)
+        return dep

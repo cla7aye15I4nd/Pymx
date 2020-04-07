@@ -49,9 +49,14 @@ def build_binary(bd, binary:Binary):
     if op in arith:
         lhs = do_build(bd, binary.left)
         rhs = do_build(bd, binary.right)
-        reg = ctx.get_var(this_type)
-        ctx.add(Arith(reg, op, lhs, rhs))
-        return reg
+        if binary.left.type == StringType():
+            reg = ctx.get_var(this_type)
+            ctx.add(Call(reg, "_string_add", [lhs, rhs]))
+            return reg
+        else:            
+            reg = ctx.get_var(this_type)
+            ctx.add(Arith(reg, op, lhs, rhs))
+            return reg
     
     if op in logic:
         this_type.bit = 8
@@ -180,9 +185,12 @@ def malloc(bd, creator:Creator, d:int):
 
     ptr = ctx.get_var(Type(32, 4))
     ctx.add(Malloc(ptr, reg))
+
+    res = ctx.get_var(Type(32, 4))
+    ctx.add(Arith(res, '+', ptr, Const(Type(32, 4), 4)))
     ctx.add(Store(cap, ptr)) 
 
-    if flag: return ptr 
+    if flag: return res
     
     it = ctx.get_var(Type(32, 4))
     ctx.add(Alloca(it))
@@ -205,22 +213,20 @@ def malloc(bd, creator:Creator, d:int):
 
     ctx.add(end)
     ctx.exit_loop()
-    return ptr
+    return res
 
 def build_access(bd, access:Access):
     ptr = do_build(bd, access.expr)
     for count, expr in enumerate(access.scale):
-        off = ctx.get_var(Type(32, 4))        
         reg = do_build(bd, expr)
         four = Const(Type(32, 4), 4)
+        addr = ctx.get_var(Type(32, 4))
         if access.type != BoolType():
             tmp = ctx.get_var(Type(32, 4))
-            ctx.add(Arith(tmp, '*', reg, four))
-            ctx.add(Arith(off, '+', tmp, four))
+            ctx.add(Arith(tmp, '*', reg, four))            
+            ctx.add(Arith(addr, '+', ptr, tmp))
         else:
-            ctx.add(Arith(off, '+', reg, four))
-        addr = ctx.get_var(Type(32, 4))
-        ctx.add(Arith(addr, '+', ptr, off))
+            ctx.add(Arith(addr, '+', ptr, reg))
 
         if count + 1 == len(access.scale) and access.lhs:
             return addr

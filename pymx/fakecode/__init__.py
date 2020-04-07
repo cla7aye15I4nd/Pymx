@@ -89,6 +89,9 @@ class Reg:
     def is_value(self, value):
         return False
 
+    def is_global(self):
+        return self.name[0] == '@'
+
 class Label:
     def __init__(self, label):
         self.label = label
@@ -123,3 +126,6 @@ class Const:
 
     def is_value(self, value):
         return self.name == value
+    
+    def is_global(self):
+        return False

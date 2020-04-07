@@ -51,12 +51,12 @@ class Context:
     def break_label(self):
         if not self.label_stack:
             return None        
-        return self.label_stack[-1][0]
+        return self.label_stack[-1][1]
 
     def continue_label(self):
         if not self.label_stack:
             return None        
-        return self.label_stack[-1][1]
+        return self.label_stack[-1][0]
 
     def enter_loop(self):
         start, end = self.get_label(), self.get_label()
