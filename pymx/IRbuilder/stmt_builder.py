@@ -28,25 +28,25 @@ def build_if(bd, if_:If):
 def build_for(bd, for_:For):
     do_build(bd, for_.init)
 
-    start, end = ctx.enter_loop()
     then = ctx.get_label()
-    tail = ctx.get_label()
+    start = ctx.get_label()
+    cont, end = ctx.enter_loop()
 
     ctx.add(start)
     
     if for_.cond:
         reg = do_build(bd, for_.cond)
-        ctx.add(Branch(reg, then, tail))
+        ctx.add(Branch(reg, then, end))
     else:
         ctx.add(Jump(then))
 
     ctx.add(then)
     do_build(bd, for_.body)
-    ctx.add(end)
+    ctx.add(cont)
 
     do_build(bd, for_.iter)
     ctx.add(Jump(start))
-    ctx.add(tail)
+    ctx.add(end)
 
     ctx.exit_loop()
 
