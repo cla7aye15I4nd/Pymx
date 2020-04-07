@@ -17,9 +17,9 @@ binary = {
 operators = unary + list(binary)
 
 arith = {
-    '+'  : 'add nsw' , 
-    '-'  : 'sub nsw' ,
-    '*'  : 'mul nsw' ,
+    '+'  : 'add' , 
+    '-'  : 'sub' ,
+    '*'  : 'mul' ,
     '/'  : 'sdiv',
     '%'  : 'srem',
     '<<' : 'shl',
@@ -37,6 +37,8 @@ logic = {
     '>'  : 'sgt',
     '>=' : 'sge',
 }
+
+swap_able = {'add', 'mul', 'or', 'and', 'xor', 'eq', 'ne'}
 
 def logic_compute(oper, x, y):
     calculator = {
@@ -63,9 +65,9 @@ def arith_compute(oper, x, y):
         return x
 
     calculator = {
-        'add nsw' : lambda x, y: x + y,
-        'sub nsw' : lambda x, y: x - y,
-        'mul nsw' : lambda x, y: x * y,
+        'add' : lambda x, y: x + y,
+        'sub' : lambda x, y: x - y,
+        'mul' : lambda x, y: x * y,
         'sdiv'    : lambda x, y: 0 if y == 0 else x // y,
         'srem'    : lambda x, y: 0 if y == 0 else x % y,
         'shl'     : lambda x, y: uint32(x) << uint32(y),
