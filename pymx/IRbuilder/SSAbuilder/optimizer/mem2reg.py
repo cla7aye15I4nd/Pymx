@@ -13,10 +13,10 @@ def place_phi_node(cfg, domin):
         values[name] = 0
         phi_map[name] = _place_phi_node(var, cfg, domin)
     
-    rename_pass(cfg, phi_map)
+    rename_pass(cfg, phi_map, domin)
     cfg.defs.clear()
 
-def rename_pass(cfg, phi_map):
+def rename_pass(cfg, phi_map, domin):
     visited = set()
     work_list = []
     block_phi = {}
@@ -34,7 +34,7 @@ def rename_pass(cfg, phi_map):
                 phi = phi_map[alloc][u]
                 phi.units.append((deepcopy(incoming_vals[alloc]), Label(pred)))
     
-    def handle_inst(block, incoming_vals):
+    def handle_inst(block, incoming_vals, incoming_glos):
         if block.label in block_phi:
             for name in block_phi[block.label]:
                 phi = phi_map[name][block.label]
@@ -43,28 +43,42 @@ def rename_pass(cfg, phi_map):
         for inst in list(block.code):
             if type(inst) is Load:
                 src = inst.src.name
-                if src not in incoming_vals:
-                    continue
-
-                val = incoming_vals[src]
-                block.code.remove(inst)                
-                for body, attr in inst.user:
-                    if type(body) in [Call, Malloc]:
-                        body.params[attr] = deepcopy(val)
-                    elif type(inst) is Phi:
-                        body.units[attr][0] = deepcopy(val)
+                if inst.src.is_global():
+                    if src not in incoming_glos:
+                        incoming_glos[src] = inst.dst                        
                     else:
-                        setattr(body, attr, deepcopy(val))                
+                        val = incoming_glos[src]
+                        block.code.remove(inst)                
+                        for body, attr in inst.user:
+                            if type(body) in [Call, Malloc]:
+                                body.params[attr] = deepcopy(val)
+                            elif type(inst) is Phi:
+                                body.units[attr][0] = deepcopy(val)
+                            else:
+                                setattr(body, attr, deepcopy(val))                        
+                elif src in incoming_vals:                                        
+                    val = incoming_vals[src]
+                    block.code.remove(inst)                
+                    for body, attr in inst.user:
+                        if type(body) in [Call, Malloc]:
+                            body.params[attr] = deepcopy(val)
+                        elif type(inst) is Phi:
+                            body.units[attr][0] = deepcopy(val)
+                        else:
+                            setattr(body, attr, deepcopy(val))                
 
             if type(inst) is Store:
                 dst = inst.dst.name
+                if inst.dst.is_global():
+                    incoming_glos[dst] = inst.src
+                    continue
                 if dst not in phi_map:
                     continue
 
                 incoming_vals[dst] = inst.src
                 block.code.remove(inst)
     
-    def _rename_pass(u, pred, incoming_vals):
+    def _rename_pass(u, pred, incoming_vals, incoming_glos):
         visit_succ = set()
         while True:
             handle_phi(u, pred)
@@ -72,28 +86,34 @@ def rename_pass(cfg, phi_map):
                 return
             
             visited.add(u)
-            handle_inst(cfg.block[u], incoming_vals)
+            handle_inst(cfg.block[u], incoming_vals, incoming_glos)
 
-            pred = u
             next_node = None            
             for i, v in enumerate(cfg.block[u].edges):
                 if i == 0:
                     next_node = v
                 elif v not in visit_succ:
                     visit_succ.add(v)
-                    work_list.append((v, pred, deepcopy(incoming_vals)))
+                    if v in domin.succ[u]:                    
+                        work_list.append((v, u, deepcopy(incoming_vals), deepcopy(incoming_glos)))
+                    else:
+                        work_list.append((v, u, deepcopy(incoming_vals), {}))
             
             if next_node is None:
                 return
-            u = next_node
+            if next_node not in domin.succ[u]:
+                incoming_glos = {}
+            
+            pred = u
+            u = next_node            
     
     cfg.compte_load_ref()
     incoming_vals = {key : Const(cfg.defs[key].dst.type, 0) for key in phi_map}
-    work_list.append((0, None, deepcopy(incoming_vals)))
+    work_list.append((0, None, deepcopy(incoming_vals), {}))
 
     while work_list:
-        u, pred, incoming_vals = work_list.pop()
-        _rename_pass(u, pred, incoming_vals)
+        u, pred, incoming_vals, incoming_glos = work_list.pop()
+        _rename_pass(u, pred, incoming_vals, incoming_glos)
 
     for alloc in phi_map:
         for blk in phi_map[alloc]:
@@ -108,7 +128,7 @@ def _place_phi_node(var, cfg, domin):
 
     phi_inst = {}
     for blk in phi_block:
-        phi = Phi(cfg.get_var(var), [])
+        phi = Phi(cfg.get_var(var.dst), [])
         phi_inst[blk] = phi
     
     return phi_inst
