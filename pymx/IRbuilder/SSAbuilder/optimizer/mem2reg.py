@@ -52,8 +52,8 @@ def rename_pass(cfg, phi_map, domin):
                         for body, attr in inst.user:
                             if type(body) in [Call, Malloc]:
                                 body.params[attr] = deepcopy(val)
-                            elif type(inst) is Phi:
-                                body.units[attr][0] = deepcopy(val)
+                            elif type(body) is Phi:
+                                body.units[attr] = (deepcopy(val), body.units[attr][1])                                
                             else:
                                 setattr(body, attr, deepcopy(val))                        
                 elif src in incoming_vals:                                        
@@ -62,9 +62,9 @@ def rename_pass(cfg, phi_map, domin):
                     for body, attr in inst.user:
                         if type(body) in [Call, Malloc]:
                             body.params[attr] = deepcopy(val)
-                        elif type(inst) is Phi:
-                            body.units[attr][0] = deepcopy(val)
-                        else:
+                        elif type(body) is Phi:
+                            body.units[attr] = (deepcopy(val), body.units[attr][1])
+                        else:                            
                             setattr(body, attr, deepcopy(val))                
 
             if type(inst) is Store:
