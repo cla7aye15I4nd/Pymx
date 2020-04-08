@@ -148,3 +148,6 @@ sample.c
 sample.s
 tools/compile.sh
 compile.sh
+cfg_linear.png
+cfg_nogvn.png
+example.ll
