@@ -34,27 +34,43 @@ from pymx.fakecode.inst import (
 
 from .dominator import build_tree
 
-class VExpr:
+class Expr:
     def __init__(self, oper, left, right):
         self.oper = oper
-        self.left = left
-        self.right = right
+        if oper in swap_able:
+            self.args = []
+            if (type(left) is Expr and left.oper == oper):
+                self.args += left.args
+            else:
+                self.args.append(left)
+
+            if (type(right) is Expr and right.oper == oper):
+                self.args += right.args
+            else:
+                self.args.append(right)
+        else:
+            self.args = [left, right]
+            
+        self.hash = hash((self.oper, hash_args(self.args, self.oper)))
+
+    def __str__(self):
+        return '( {} {} )'.format(self.oper, [x.__str__() for x in self.args])
 
     def __hash__(self):
-        if self.oper in swap_able:
-            hash_x = hash((self.oper, (self.left, self.right)))
-            hash_y = hash((self.oper, (self.right, self.left)))
-            return min(hash_x, hash_y)
-        else:
-            return hash((self.oper, (self.left, self.right)))
+        return self.hash
 
     def __eq__(self, other):
-        if self.oper != other.oper:
+        if type(other) is not Expr:
             return False
-        if self.oper in swap_able:
-            return {self.left, self.right} == {other.left, other.right}
+        return self.oper == other.oper and self.args == other.args
+
+def hash_args(args, oper):
+    if type(args) is list:
+        if oper in swap_able:
+            return hash(tuple(sorted([hash(x) for x in args])))
         else:
-            return (self.left, self.right) == (other.left, other.right)
+            return hash(tuple(args))
+    return hash(args)
 
 def optimize(cfg):
     cfg.compute_graph()
@@ -81,8 +97,8 @@ def gvn_pass(cfg, domin, bid, vn, tb):
 
 def try_replace(inst, vn, tb):
     def replace_hook(obj):
-        if obj and obj.name in tb:
-            return deepcopy(tb[obj.name])
+        if obj and obj.name in tb and tb[obj.name] in vn:
+            return deepcopy(vn[tb[obj.name]])
         return obj
     
     if type(inst) is Store:
@@ -108,24 +124,30 @@ def try_replace(inst, vn, tb):
     if type(inst) is Phi:
         inst.units = [(replace_hook(unit[0]), unit[1]) for unit in inst.units]
 
-    value = value_number(inst, vn)
-    if value is not None:
+    value = value_number(inst, tb)
+    if value is not None:        
+        tb[inst.dest().name] = value
         if value in vn:            
-            tb[inst.dest().name] = vn[value]
             return True        
         vn[value] = inst.dest()
     
     return False
 
-def value_number(obj, vn):
+def value_number(obj, tb):
     if type(obj) is Const:
         return obj.name
     if type(obj) is Reg:
-        if obj.name in vn:
-            return vn[obj.name]
+        if obj.name in tb:
+            return tb[obj.name]
         else:    
-            return None    
-    if type(obj) is Arith:        
-        return VExpr(obj.oper, obj.lhs.name, obj.rhs.name)
+            return obj.name
+    if type(obj) is Arith:
+        lhs = value_number(obj.lhs, tb)
+        rhs = value_number(obj.rhs, tb)
+        return Expr(obj.oper, lhs, rhs)
+    if type(obj) is Logic:
+        lhs = value_number(obj.lhs, tb)
+        rhs = value_number(obj.rhs, tb)
+        return Expr(obj.oper, lhs, rhs)        
 
     return None

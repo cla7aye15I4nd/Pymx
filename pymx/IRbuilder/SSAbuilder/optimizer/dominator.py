@@ -1,6 +1,10 @@
 class DomTree:
-    def __init__(self, succ):
+    def __init__(self, succ, cfg):
         self.succ = succ
+        self.df = {}
+        for i, block in cfg.block.items():
+            self.df[i] = block.df
+        
         self.analysis()
     
     def dfs(self, u, clk, level):
@@ -135,4 +139,4 @@ def build_tree(cfg):
     dfs(0, 1)
     compute_df(0)
 
-    return DomTree(domin)
+    return DomTree(domin, cfg)

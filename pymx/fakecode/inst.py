@@ -44,6 +44,14 @@ class Store(Base):
     def __str__(self):
         return '  store {}, {}, align {}\n'.format(self.src, self.dst, self.src.type.align)
 
+    def depend(self):
+        ret = []
+        if type(self.src) is Reg:
+            ret.append(self.src.name)
+        if type(self.dst) is Reg:
+            ret.append(self.dst.name)
+        return ret
+
 class Load(Base):
     def __init__(self, src, dst):
         self.src = deepcopy(src)
@@ -130,6 +138,8 @@ class Arith(Base):
         if self.oper == arith['-']:
             if self.lhs == self.rhs:
                 return Const(self.dst.type, 0)
+            if self.rhs.is_value(0):
+                return self.lhs
         return None
 
     def depend(self):

@@ -10,8 +10,8 @@ def place_phi_node(cfg, domin):
     phi_map = {}
     for var in cfg.defs.values():
         name = var.dst.name
-        values[name] = 0
-        phi_map[name] = _place_phi_node(var, cfg, domin)
+        values[name] = 0        
+        phi_map[name] = _place_phi_node(var, cfg, domin)    
     
     rename_pass(cfg, phi_map, domin)
     cfg.defs.clear()
@@ -121,8 +121,7 @@ def rename_pass(cfg, phi_map, domin):
             cfg.block[blk].code.insert(0, phi)
 
 def _place_phi_node(var, cfg, domin):
-    var_defs = [x for x, _ in var.store]
-    
+    var_defs = [x for x, _ in var.store]    
     live_blks = livein_blocks(var, cfg, var_defs)    
     phi_block = calculate_phi(cfg, domin, var_defs, live_blks)
 
@@ -151,6 +150,20 @@ def livein_blocks(var, cfg, var_defs):
     return live_blks
 
 def calculate_phi(cfg, domin, var_defs, live_blks):
+    phi_block = []
+    work_list = list(deepcopy(var_defs))
+
+    while work_list:
+        u = work_list.pop(0)
+        for v in cfg.block[u].df:
+            if v not in phi_block:
+                phi_block.append(v)
+                if v not in var_defs:
+                    work_list.append(v)
+
+    return phi_block
+
+def calculate_phi_linear(cfg, domin, var_defs, live_blks):
     pq = Heap()
     phi_block = []
     for blk in var_defs:
@@ -158,12 +171,13 @@ def calculate_phi(cfg, domin, var_defs, live_blks):
         if node:
             pq.push(node)
 
-    visit = set()
-    while not pq.empty():
+    visit_pq = set()
+    visit_wk = set()
+    while not pq.empty():        
         root = pq.pop()
 
         rt = root.x
-        visit.add(rt)
+        visit_wk.add(rt)
         work_list = [rt]
 
         while work_list:
@@ -174,22 +188,21 @@ def calculate_phi(cfg, domin, var_defs, live_blks):
                 succ = domin.get(succ)
                 if succ.level > root.level:
                     return
-                if succ.x in visit:
+                if succ.x in visit_pq:
                     return                
-                visit.add(succ.x)
-
+                visit_pq.add(succ.x)
+                
                 if succ.x not in live_blks:
                     return
-                
                 phi_block.append(succ.x)
-                if succ.x not in var_defs:
+                if succ.x not in var_defs:                    
                     pq.push(domin.get(succ.x))
 
             for succ in block.edges:
                 do_work(succ)
-            for ch in domin.succ[node]:
-                if ch not in visit:
-                    visit.add(ch)
+            for ch in domin.df[node]:
+                if ch not in visit_wk:
+                    visit_wk.add(ch)
                     work_list.append(ch)
     return phi_block
 

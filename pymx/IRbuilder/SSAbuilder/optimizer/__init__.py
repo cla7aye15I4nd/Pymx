@@ -15,11 +15,11 @@ def optimize(cfg, args):
     place_phi_node(cfg, domin)
     peephole.optimize(cfg)
 
+    gvn.optimize(cfg)
     constant_fold(cfg)
     peephole.optimize(cfg)
     
-    # dce.optimize(cfg) # BUG
-    gvn.optimize(cfg)
+    dce.optimize(cfg)
  
     cfg._serial()
     if args.debug:

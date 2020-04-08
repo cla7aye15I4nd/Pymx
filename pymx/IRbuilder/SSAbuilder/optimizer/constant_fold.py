@@ -1,7 +1,9 @@
 from copy import deepcopy
 
-from pymx.fakecode.inst import Store, Branch, Ret, Phi, Jump
-from pymx.fakecode.inst import Call, Malloc, Arith, Logic
+from pymx.fakecode.inst import (
+    Store, Branch, Ret, Phi, Jump,
+    Load, Call, Malloc, Arith, Logic
+)
 
 def constant_fold(cfg):
     cfg.compute_graph()
@@ -86,6 +88,10 @@ def elim_phi(cfg):
 def replace(inst, replace_hook):
     if type(inst) is Store:
         inst.src = replace_hook(inst.src)
+        inst.dst = replace_hook(inst.dst)
+    if type(inst) is Load:
+        inst.src = replace_hook(inst.src)
+
     if type(inst) is Branch:
         inst.var = replace_hook(inst.var)
     if type(inst) is Ret:
