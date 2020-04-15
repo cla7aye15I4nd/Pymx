@@ -21,6 +21,9 @@ class Base:
     def to_jump(self):
         return None
 
+    def generate(self, gen):
+        return gen.generate(gen, self)
+
 class Alloca(Base):
     def __init__(self,  dst):
         self.dst = deepcopy(dst)
@@ -77,6 +80,9 @@ class Branch(Base):
 
     def __str__(self):
         return '  br {}, label %{}, label %{}\n'.format(self.var, self.true.label, self.false.label)
+
+    def reverse(self):
+        self.true, self.false = self.false, self.true
 
     def to_jump(self):
         if type(self.var) is Const:
@@ -153,18 +159,19 @@ class Arith(Base):
 class Logic(Base):
     def __init__(self, dst, oper, lhs, rhs):
         self.dst = deepcopy(dst)
-        if oper == '>':
-            self.lhs = deepcopy(rhs)
-            self.rhs = deepcopy(lhs)
-            self.oper = logic['<']
-        elif oper == '>=':
-            self.lhs = deepcopy(rhs)
-            self.rhs = deepcopy(lhs)
-            self.oper = logic['<=']
-        else:
-            self.lhs = deepcopy(lhs)
-            self.rhs = deepcopy(rhs)
-            self.oper = logic[oper]
+        self.lhs = deepcopy(lhs)
+        self.rhs = deepcopy(rhs)
+        self.oper = logic[oper]
+
+    def reverse(self):
+        rev = {
+            logic['>']  : logic['<'],
+            logic['<']  : logic['>'],
+            logic['>='] : logic['<='],
+            logic['<='] : logic['>='],
+        }
+        self.oper = rev[self.oper]
+        self.lhs, self.rhs = self.rhs, self.lhs
 
     def __str__(self):
         return '  {} = icmp {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)
@@ -221,3 +228,14 @@ class Phi(Base):
             if type(unit[0]) is Reg:
                 dep.append(unit[0].name)
         return dep
+
+class Move(Base):
+    def __init__(self, dst, src):
+        self.dst = deepcopy(dst)
+        self.src = deepcopy(src)
+
+    def depend(self):
+        return [self.src]
+    
+    def __str__(self):
+        return '  {} = {}\n'.format(self.dst.name, self.src)

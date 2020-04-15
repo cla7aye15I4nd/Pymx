@@ -152,3 +152,6 @@ cfg_linear.png
 cfg_nogvn.png
 example.ll
 sample.S
+cfg_rmv.dot
+cfg_rmv.png
+sample.riscv
