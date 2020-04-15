@@ -366,21 +366,21 @@ class BGT(BLT):
         super().__init__(rt, rs, offset)
 
     def __str__(self):
-        return f'  bgt {self.rs2}, {self.rs1}\n'
+        return f'  bgt {self.rs2}, {self.rs1}, {self.offset}\n'
 
 class BLE(BGE):
     def __init__(self, rs, rt, offset):
         super().__init__(rt, rs, offset)
 
     def __str__(self):
-        return f'  ble {self.rs2}, {self.rs1}\n'
+        return f'  ble {self.rs2}, {self.rs1}, {self.offset}\n'
 
 class BGTU(BLTU):
     def __init__(self, rs, rt, offset):
         super().__init__(rt, rs, offset)
 
     def __str__(self):
-        return f'  bgtu {self.rs2}, {self.rs1}\n'
+        return f'  bgtu {self.rs2}, {self.rs1}, {self.offset}\n'
 
 class BLEU(BGEU):
     def __init__(self, rs, offset):

@@ -8,6 +8,7 @@ from .lexer import tokenize
 from .parser import parse
 from .semantic import semantic_check
 from .IRbuilder import IRbuild
+from .codegen import riscv
 
 from .utils import print_tokens, print_ir
 from .errors import error_collector, CompilerError
@@ -30,6 +31,7 @@ def get_arguments():
     parser.add_argument('-d', dest='debug', action='store_true')
     parser.add_argument('-c', dest='syntax_only', action='store_true')    
     parser.add_argument('-l', dest='ir_file')
+    parser.add_argument('-s', dest='asm_file')
     return parser.parse_args()
 
 def process_file(args):
@@ -53,11 +55,12 @@ def process_file(args):
         return None
 
     ir = IRbuild(tree, args)
+    asm = riscv.build(ir, args)
 
     if args.ir_file:
         write_file(args.ir_file, ir.__str__())
-    if args.debug:
-        pass    
+    if args.asm_file:
+        write_file(args.asm_file, asm.__str__())
     
 
 def write_file(file, text):

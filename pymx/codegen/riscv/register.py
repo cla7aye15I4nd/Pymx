@@ -8,8 +8,14 @@ class Register:
         return self.abi
 
 class VirtualRegister(Register):
-    def __init__(self, idx):
-        super().__init__(idx, f'%{idx}', f'%{idx}', True)
+    def __init__(self, reg):
+        if type(reg) == int:
+            idx = reg
+            abi = 'v' + str(reg)
+        else:
+            idx = reg.name[1:]
+            abi = 'v' + reg.name[1:]
+        super().__init__(idx, abi, True)
 
 register = [        
     Register( 0, 'zero', False),
@@ -51,3 +57,4 @@ ra = register[1]
 sp = register[2]
 x6 = register[6]
 fp = register[9]
+a0 = register[10]
