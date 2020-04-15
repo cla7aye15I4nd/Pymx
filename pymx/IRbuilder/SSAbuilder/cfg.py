@@ -29,6 +29,14 @@ class CFG:
         self.count += 1
         return reg
 
+    def compute_users(self):
+        users = {}
+        for block in self.block.values():
+            for inst in block.code:
+                for user in inst.depend():
+                    users[user] = users.get(user, 0) + 1
+        return users
+    
     def compute_label_ref(self):        
         for block in self.block.values():
             block.load_edge()
@@ -251,7 +259,7 @@ class GlobalRef:
     def add_store(self, store):
         self.store.append(store)
 
-def build_CFG(func, args):
+def build_CFG(func, args=None):
     cfg = CFG()
     cfg.par_cnt = len(func.params)
 
@@ -264,10 +272,11 @@ def build_CFG(func, args):
             cfg.add_defs(inst)
         elif type(inst) is Label:
             flag = True
-            if (type(block.last_inst()) not in
-                    [Branch, Jump, Ret]):
-                block.add_inst(Jump(inst))
-            cfg.add_block(block)
+            if block.code:
+                if (type(block.last_inst()) not in
+                        [Branch, Jump, Ret]):
+                    block.add_inst(Jump(inst))
+                cfg.add_block(block)
             block = Block(inst.label)
         else:
             if flag:

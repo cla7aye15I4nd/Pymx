@@ -20,11 +20,11 @@ def optimize(cfg, args):
     peephole.optimize(cfg)
     
     dce.optimize(cfg)
- 
     cfg._serial()
+    
+    code = cfg.serial()
     if args.debug:
         print_cfg(cfg)
         print_domin(build_tree(cfg))
     
-
-    return cfg
+    return code
