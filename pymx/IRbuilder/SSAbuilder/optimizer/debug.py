@@ -1,7 +1,7 @@
 import os
 
-def print_cfg(cfg):
-    with open('cfg.dot', 'w') as f:
+def print_cfg(cfg, filename='cfg'):
+    with open(f'{filename}.dot', 'w') as f:
         f.write('digraph cfg{\n')
         for block in cfg.block.values():            
             f.write(f'  node{block.label}[label="{{ label %{block.label} | {block}}}", fontsize="25" fontname="Ubuntu Mono", fillcolor="#fdf6e4", style=filled, shape="record"]\n')
@@ -16,7 +16,7 @@ def print_cfg(cfg):
                 
         f.write('}')
     
-    os.system('dot -Tpng cfg.dot -o cfg.png')
+    os.system(f'dot -Tpng {filename}.dot -o {filename}.png')
 
 def print_domin(domin):
     with open('domin.dot', 'w') as f:
