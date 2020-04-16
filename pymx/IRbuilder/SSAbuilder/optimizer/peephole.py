@@ -16,11 +16,11 @@ def control_flow_optimize(cfg):
     while flag:
         flag = False
         cfg.compute_label_ref()
- 
-        if not flag:
-            flag = eliminate_useless_jump(cfg)
+
         if not flag:
             flag = erase_useless_block(cfg)
+        if not flag:
+            flag = eliminate_useless_jump(cfg)        
         if not flag:
             flag = combine_block(cfg)
 
@@ -78,12 +78,13 @@ def eliminate_useless_jump(cfg):
                         block.tail_jump = tar_t                        
                         if len(block.code) == 1:
                             block.head_jump = tar_t                            
-                        continue
+                        return flag
                 else:
                     flag = True                
                     replace_phi_label(inst.true.label, src, tar_t)
                     inst.true.label = tar_t
                     block.edges.append(tar_t)
+                    return flag
             if tar_f:
                 if tar_f in block.edges:
                     for cmd in cfg.block[tar_f].code:
@@ -97,12 +98,13 @@ def eliminate_useless_jump(cfg):
                         block.tail_jump = tar_f
                         if len(block.code) == 1:
                             block.head_jump = tar_f
-                        continue
+                        return flag
                 else:
                     flag = True                
                     replace_phi_label(inst.false.label, src, tar_f)
                     inst.false.label = tar_f
-                    block.edges.append(tar_f)                    
+                    block.edges.append(tar_f)
+                    return flag
         
         if type(inst) is Jump:
             tar = cfg.block[inst.label.label].head_jump
@@ -114,6 +116,7 @@ def eliminate_useless_jump(cfg):
                 block.edges = [tar]
                 if len(block.code) == 1:
                     block.head_jump = tar
+                return flag
                     
     return flag
 

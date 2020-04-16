@@ -272,12 +272,12 @@ def build_CFG(func, args=None):
             cfg.add_defs(inst)
         elif type(inst) is Label:
             flag = True
-            if block.code:
+            if block.label or inst.label:
                 if (type(block.last_inst()) not in
                         [Branch, Jump, Ret]):
                     block.add_inst(Jump(inst))
                 cfg.add_block(block)
-            block = Block(inst.label)
+                block = Block(inst.label)
         else:
             if flag:
                 block.add_inst(inst)
