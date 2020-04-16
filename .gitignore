@@ -155,3 +155,7 @@ sample.S
 cfg_rmv.dot
 cfg_rmv.png
 sample.riscv
+builtin.s
+test.in
+test.out
+test.s
