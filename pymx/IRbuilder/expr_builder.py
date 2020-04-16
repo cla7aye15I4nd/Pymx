@@ -250,9 +250,19 @@ def build_funccall(bd, funcall:FuncCall):
             regs.append(do_build(bd, expr))
         reg = ctx.get_var(cast(funcall.type))
         if func.left.type == StringType():
-            ctx.add(Call(reg, f'_string_{func.right.text}', regs))
+            if func.right.text == 'length':
+                ptr = ctx.get_var(regs[0].type)                
+                ctx.add(Arith(ptr, '+', regs[0], Const(Type(32, 4), -4)))
+                ctx.add(Load(ptr, reg))
+            else:
+                ctx.add(Call(reg, f'_string_{func.right.text}', regs))
         elif func.left.type == ArrayType():
-            ctx.add(Call(reg, f'__array_{func.right.text}', regs))
+            if func.right.text == 'size':
+                ptr = ctx.get_var(regs[0].type)                
+                ctx.add(Arith(ptr, '+', regs[0], Const(Type(32, 4), -4)))
+                ctx.add(Load(ptr, reg))
+            else:
+                ctx.add(Call(reg, f'__array_{func.right.text}', regs))
         else:
             ctx.add(Call(reg, f'_{func.left.type.kind}_{func.right.text}', regs))
         return reg
