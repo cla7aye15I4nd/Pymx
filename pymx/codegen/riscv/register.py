@@ -1,11 +1,17 @@
 class Register:
-    def __init__(self, idx, abi, preserved):
+    def __init__(self, idx, abi, preserved, virtual=False):
         self.idx = idx
         self.abi = abi
         self.preserved = preserved
+        self.virtual = virtual
 
     def __str__(self):
         return self.abi
+
+    def __eq__(self, other):
+        if type(other) != type(self):
+            return False
+        return (self.idx, self.abi) == (other.idx, other.abi)    
 
 class VirtualRegister(Register):
     def __init__(self, reg):
@@ -13,9 +19,9 @@ class VirtualRegister(Register):
             idx = reg
             abi = 'v' + str(reg)
         else:
-            idx = reg.name[1:]
+            idx = int(reg.name[1:])
             abi = 'v' + reg.name[1:]
-        super().__init__(idx, abi, True)
+        super().__init__(idx, abi, True, True)
 
 register = [        
     Register( 0, 'zero', False),

@@ -122,6 +122,10 @@ class Arith(Base):
         self.rhs = deepcopy(rhs)
         self.oper = arith[oper]
 
+        if oper == '-' and type(rhs) is Const:
+            self.oper = arith['+']
+            self.rhs.name *= -1
+
     def __str__(self):
         return '  {} = {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)    
 
@@ -165,13 +169,14 @@ class Logic(Base):
 
     def reverse(self):
         rev = {
-            logic['>']  : logic['<'],
-            logic['<']  : logic['>'],
-            logic['>='] : logic['<='],
-            logic['<='] : logic['>='],
+            logic['>']  : logic['<='],
+            logic['<']  : logic['>='],
+            logic['>='] : logic['<'],
+            logic['<='] : logic['>'],
+            logic['!='] : logic['=='],
+            logic['=='] : logic['!='],
         }
-        self.oper = rev[self.oper]
-        self.lhs, self.rhs = self.rhs, self.lhs
+        self.oper = rev[self.oper]        
 
     def __str__(self):
         return '  {} = icmp {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)

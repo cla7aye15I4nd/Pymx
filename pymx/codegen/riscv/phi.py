@@ -1,9 +1,12 @@
-from pymx.fakecode.inst import Phi, Move
+from pymx.fakecode.inst import Phi, Move, Logic, Branch
+from .context import ctx
 
 def remove(cfg):
     trans = {}
     
     users = cfg.compute_users()
+    ctx.users = users
+    
     for block in cfg.block.values():
         code = block.code
         while type(code[0]) is Phi:
@@ -12,8 +15,15 @@ def remove(cfg):
                 if users.get(src.name, 0) == 1:
                     trans[src.name] = phi.dst.name
                 else:
-                    seq = cfg.block[label.label].code
-                    seq.insert(-1, Move(phi.dst, src))
+                    seq, pos = cfg.block[label.label].code, -1
+                    if (len(seq) > 1 and 
+                            type(seq[-1]) is Branch and 
+                                type(seq[-2]) is Logic):
+                        dest = seq[-2].dest()
+                        var = seq[-1].var
+                        if var == dest and users[var.name] == 1:
+                            pos = -2
+                    seq.insert(pos, Move(phi.dst, src))
             code.pop(0)    
 
     for block in cfg.block.values():

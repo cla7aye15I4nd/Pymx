@@ -10,7 +10,8 @@ class AsmCode:
         self.text.append(text)
 
     def __str__(self):
-        code = '\n'.join(text.__str__() for text in self.text)
+        code = ".text\n.globl main\n"
+        code += '\n'.join(text.__str__() for text in self.text)
         return code
 
 def build(ir, args):

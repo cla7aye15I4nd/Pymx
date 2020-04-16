@@ -8,6 +8,7 @@ class Context:
         self.cur = 0
         self.name = ''
         self.code = []
+        self.users = {}
         self.regfile = {}
         self.regcount = 0
         self.next_block = -1
@@ -20,7 +21,12 @@ class Context:
     def get_vr(self):
         while f'v{self.regcount}' in self.regfile:
             self.regcount += 1
+        self.regfile[f'v{self.regcount}'] = None
         return VirtualRegister(self.regcount)
+
+    def book_reg(self, reg, pv):
+        name = 'v' + reg.name[1:]
+        self.regfile[name] = pv
 
     def pop_front(self):
         self.cur = 0

@@ -5,6 +5,21 @@ class Instruction:
     def __str__(self):
         return 'unknown'
 
+    def replace(self, regfile):
+        def replace_hook(reg):
+            if not reg.virtual:
+                return reg
+            if reg.abi not in regfile:
+                return reg
+            if regfile[reg.abi] is None:
+                return reg
+            return regfile[reg.abi]
+
+        for name in ['rs', 'rs1', 'rs2', 'rd']:
+            if hasattr(self, name):
+                obj = replace_hook(getattr(self, name))
+                setattr(self, name, obj)
+
 # Instruction Type Object
 class Branch(Instruction):
     def __init__(self, mask, rs1, rs2, offset):
