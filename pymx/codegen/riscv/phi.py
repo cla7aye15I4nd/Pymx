@@ -31,3 +31,5 @@ def remove(cfg):
             name = inst.dest().name if inst.dest() else None
             if name in trans:
                 inst.dst.name = trans[name]
+
+    return trans

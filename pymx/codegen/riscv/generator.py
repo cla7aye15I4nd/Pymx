@@ -12,7 +12,7 @@ from .isa import (
     SLTI, SLTZ, 
     SLT, 
     BEQ, BNE, BLT, BLE, BGT, BGE,  
-    BEQZ, BNEZ,
+    BEQZ, BNEZ, BLTZ, BLEZ, BGTZ, BGEZ,
     SEQZ, SNEZ,  
     J,
     Ret, MV,
@@ -78,7 +78,10 @@ def generate_ret(g, obj):
         if type(obj.reg) is Const:
             res.append(LI(a0, obj.reg.name))
         else:
-            ctx.book_reg(obj.reg, a0)
+            if ctx.parnum:
+                res.append(MV(a0, vr(obj.reg)))
+            else:
+                ctx.book_reg(obj.reg, a0)
     return res + [Ret()]
 
 def generate_arith(g, obj):
@@ -202,14 +205,16 @@ def generate_register(obj, res=None):
         return vr(obj)
 
 def generate_branch_inst(op, lv, rv, offset):
-    return {
-        'slt' : BLT,
-        'sgt' : BGT,
-        'sle' : BLE,
-        'sge' : BGE,
-        'eq'  : BEQ,
-        'ne'  : BNE,
-    }[op](lv, rv, offset)
+    if rv == zero:
+        return {
+            'slt' : BLTZ, 'sgt' : BGTZ, 'sle' : BLEZ,
+            'sge' : BGEZ, 'eq'  : BEQZ, 'ne'  : BNEZ,
+        }[op](lv, offset)
+    else:
+        return {
+            'slt' : BLT, 'sgt' : BGT, 'sle' : BLE,
+            'sge' : BGE, 'eq'  : BEQ, 'ne'  : BNE,
+        }[op](lv, rv, offset)
 
 def generate_call(g, obj):
     res = []

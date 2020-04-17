@@ -5,6 +5,12 @@ class Instruction:
     def __str__(self):
         return 'unknown'
 
+    def def_set(self):
+        return {getattr(self, 'rd')} if hasattr(self, 'rd') else set()
+
+    def use_set(self):
+        return {getattr(self, n) for n in ['rs', 'rs1', 'rs2'] if hasattr(self, n)}
+
     def replace(self, regfile):
         def replace_hook(reg):
             if not reg.virtual:
@@ -20,6 +26,9 @@ class Instruction:
                 obj = replace_hook(getattr(self, name))
                 setattr(self, name, obj)
 
+    def is_branch(self):
+        return False
+
 # Instruction Type Object
 class Branch(Instruction):
     def __init__(self, mask, rs1, rs2, offset):
@@ -30,6 +39,9 @@ class Branch(Instruction):
 
     def __str__(self):
         return f'  b{self.mask} {self.rs1}, {self.rs2}, {self.offset}\n'
+
+    def is_branch(self):
+        return True
 
 class Load(Instruction):
     def __init__(self, mask, rd, rs, offset):
@@ -432,9 +444,15 @@ class CALL(JALR):
     def __str__(self):
         return f'  call {self.offset}\n'
 
+    def def_set(self):
+        return {ra, x6}
+
 class TAIL(JALR):
     def __init__(self, offset):
         super().__init__(zero, x6, offset)
 
     def __str__(self):
         return f'  tail {self.offset}\n'
+
+    def def_set(self):
+        return {ra, x6}

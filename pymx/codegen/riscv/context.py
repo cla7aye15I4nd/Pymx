@@ -9,7 +9,8 @@ class Context:
         self.name = ''
         self.code = []
         self.users = {}
-        self.regfile = {}
+        self.parnum = 0
+        self.regfile = {}        
         self.regcount = 0
         self.next_block = -1
 

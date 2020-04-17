@@ -11,7 +11,10 @@ class Register:
     def __eq__(self, other):
         if type(other) != type(self):
             return False
-        return (self.idx, self.abi) == (other.idx, other.abi)    
+        return self.abi == other.abi
+
+    def __hash__(self):
+        return hash(self.abi)
 
 class VirtualRegister(Register):
     def __init__(self, reg):
