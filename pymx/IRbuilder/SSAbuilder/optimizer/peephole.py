@@ -20,9 +20,9 @@ def control_flow_optimize(cfg):
         if not flag:
             flag = erase_useless_block(cfg)
         if not flag:
-            flag = eliminate_useless_jump(cfg)        
-        if not flag:
             flag = combine_block(cfg)
+        if not flag:
+            flag = eliminate_useless_jump(cfg)
 
 def eliminate_alloc(cfg):
     flag = True
