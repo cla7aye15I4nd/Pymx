@@ -160,7 +160,5 @@ test.in
 test.out
 test.s
 *.dot
-__init_static_regster.png
-main_regster.png
-regster.png
-qpow_regster.png
+*_regster.png
+

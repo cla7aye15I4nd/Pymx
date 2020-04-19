@@ -38,7 +38,7 @@ logic = {
     '>=' : 'sge',
 }
 
-swap_able = {'add', 'mul', 'or', 'and', 'xor', 'eq', 'ne'}
+swap_able = {'add', 'mul', 'or', 'and', 'xor'}
 
 def logic_compute(oper, x, y):
     calculator = {

@@ -48,6 +48,15 @@ class Expr:
                 self.args += right.args
             else:
                 self.args.append(right)
+
+            arg_int = [e for e in self.args if type(e) is int]
+            arg_other = [e for e in self.args if type(e) is not int]
+
+            if oper == 'add':
+                res = sum(arg_int)
+                if res != 0 or not arg_other:
+                    arg_other.append(res)
+                self.args = arg_other                
         else:
             self.args = [left, right]
             
@@ -63,6 +72,11 @@ class Expr:
         if type(other) is not Expr:
             return False
         return self.oper == other.oper and self.args == other.args
+
+    def get(self):
+        if len(self.args) > 1:
+            return self
+        return self.args[0]
 
 def hash_args(args, oper):
     if type(args) is list:
@@ -125,8 +139,10 @@ def try_replace(inst, vn, tb):
         inst.units = [(replace_hook(unit[0]), unit[1]) for unit in inst.units]
 
     value = value_number(inst, tb)
-    if value is not None:        
-        tb[inst.dest().name] = value
+    if inst.dest():     
+        vn[inst.dst.name] = inst.dst
+    if value is not None:           
+        tb[inst.dst.name] = value
         if value in vn:            
             return True        
         vn[value] = inst.dest()
@@ -144,10 +160,10 @@ def value_number(obj, tb):
     if type(obj) is Arith:
         lhs = value_number(obj.lhs, tb)
         rhs = value_number(obj.rhs, tb)
-        return Expr(obj.oper, lhs, rhs)
+        return Expr(obj.oper, lhs, rhs).get()
     if type(obj) is Logic:
         lhs = value_number(obj.lhs, tb)
         rhs = value_number(obj.rhs, tb)
-        return Expr(obj.oper, lhs, rhs)        
+        return Expr(obj.oper, lhs, rhs).get()
 
     return None
