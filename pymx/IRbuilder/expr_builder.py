@@ -238,12 +238,12 @@ def build_access(bd, access:Access):
 def build_funccall(bd, funcall:FuncCall):
     func = funcall.expr
     if type(func) is Var:
-        if func.name == 'println':
+        if func.name in ['print', 'println']:
             par = funcall.params[0]
             if (type(par) is FuncCall and 
                     type(par.expr) is Var and 
                         par.expr.name == 'toString'):                
-                func.name.text = 'printInt'
+                func.name.text = 'printInt' if func.name == 'print' else '__printIntLn'
                 funcall.params = par.params
 
         regs = []
