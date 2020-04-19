@@ -247,7 +247,7 @@ def generate_malloc(g, obj):
     else:
         res.append(MV(a0, vr(par)))
 
-    res.append(CALL('__malloc'))
+    res.append(CALL('malloc'))
     res.append(MV(vr(obj.dst), a0))
     return res
 

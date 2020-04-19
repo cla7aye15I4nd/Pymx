@@ -86,6 +86,9 @@ class Reg:
             return False
         return self.name == other.name
 
+    def __hash__(self):
+        return hash(f'REG_{self.name}')
+
     def is_value(self, value):
         return False
 
@@ -122,7 +125,13 @@ class Const:
         return '{} {}'.format(self.type, self.name)
 
     def __eq__(self, other):
-        return False
+        if type(other) is not Const:
+            return False
+        return self.name == other.name
+        
+    
+    def __hash__(self):
+        return hash(f'CONST_{self.name}')
 
     def is_value(self, value):
         return self.name == value

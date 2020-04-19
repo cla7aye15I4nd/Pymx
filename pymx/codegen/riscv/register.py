@@ -55,8 +55,8 @@ register = [
     Register(25, 's9', True),
     Register(26, 's10', True),
     Register(27, 's11', True),
-    Register(28, 't3', True),
-    Register(29, 't4', True),
+    Register(28, 't3', False),
+    Register(29, 't4', False),
     Register(30, 't5', False),
     Register(31, 't6', False),
 ]

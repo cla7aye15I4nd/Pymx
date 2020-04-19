@@ -5,7 +5,7 @@ from .register import register
 def color(graph):
     complete = list({register[node.color] for node in graph.values() if node.color})
     
-    restrict(graph)
+    # restrict(graph) # BUG!!!
     sample_shader(graph, complete)
     return graph
 
@@ -16,9 +16,9 @@ def sample_shader(graph, complete):
         name = node.name
         adjust = {graph[n].color for n in node.edge if graph[n].color}
         for r in complete + register[5:]:
-            if r.idx not in adjust and not r.preserved:
+            if r.idx not in adjust and r.preserved:
                 ctx.regfile[name] = r
-                node.color = r.idx
+                node.color = r.idx                
                 break
 
     for node in graph.values():

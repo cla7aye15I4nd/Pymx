@@ -7,12 +7,14 @@ from .context import ctx
 from .simpify import simpify
 from .register import register
 from .allocator import allocate
+from .isa import CALL, TAIL, Ret
 
 class FunctionBlock:
     def __init__(self, name):
         self.name = f'{name}:\n'
         self.blocks = {}
         self.block = []
+        self.setup = []
 
     def add_block(self, block):
         self.blocks[block.label] = block
@@ -32,18 +34,30 @@ class FunctionBlock:
                 inst.replace(ctx.regfile)
 
     def __str__(self):
-        return self.name + ''.join([bk.__str__() for bk in self.block])
+        text = self.name
+        text += ''.join([cm.__str__() for cm in self.setup])
+        text += ''.join([bk.__str__() for bk in self.block])
+        return text
 
 class BasicBlock:
     def __init__(self, name, label):
         self.label = f'.{name}_L{label}'
-        self.code = []                
+        self.code = []    
+        self.call = False
+        self.ret  = False            
 
     def add_inst(self, inst):
         if type(inst) is list:
             self.code += inst
         elif inst:
             self.code.append(inst)
+
+    def test(self):
+        for inst in self.code:
+            if type(inst) is CALL:
+                self.call = True
+            if type(inst) in [Ret, TAIL]:
+                self.call = True
 
     def __str__(self):
         return self.label + ':\n' + ''.join([inst.__str__() for inst in self.code])
@@ -81,11 +95,12 @@ def build_func(func, args):
         
         fun.add_block(build_block(func.name, block, next_block))
         
-    fun.replace()
-    fun.simpify()
+    fun.replace()    
     allocate(fun, args)
 
     fun.replace()
+    fun.simpify()
+
     return fun
 
 def build_block(name, block, next_blk):
