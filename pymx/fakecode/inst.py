@@ -130,6 +130,11 @@ class Arith(Base):
             if num > 0 and bin(num).count('1') == 1:
                 self.oper = arith['>>']
                 self.rhs.name = len(bin(num)) - 3
+        elif oper == '*' and type(rhs) is Const:
+            num = rhs.name
+            if num > 0 and bin(num).count('1') == 1:
+                self.oper = arith['<<']
+                self.rhs.name = len(bin(num)) - 3
 
     def __str__(self):
         return '  {} = {} {}, {}\n'.format(self.dst.name, self.oper, self.lhs, self.rhs.name)    
