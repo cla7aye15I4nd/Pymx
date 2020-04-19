@@ -51,10 +51,16 @@ def build_global_variable(bd, prog:Program):
         
         gvar = Global(vtype, name, vtype.align)
         variables.append(gvar)
+        
         ctx.global_var[name] = Reg(vtype, '@' + name)
         if var.var_expr:
-            reg = var.var_expr.build(bd)
-            ctx.add(Store(reg, ctx.global_var[name]))
+            vexpr = var.var_expr
+            if type(vexpr) is Constant:
+                gvar.value = vexpr.expr.content
+            else:
+                reg = vexpr.build(bd)
+                ctx.add(Store(reg, ctx.global_var[name]))
+        
     return variables
 
 def build_function(bd, func:Function) -> Func:
