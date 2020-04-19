@@ -27,7 +27,7 @@ class VirtualRegister(Register):
         super().__init__(idx, abi, True, True)
 
 register = [        
-    Register( 0, 'zero', False),
+    Register( 0, 'zero', True),
     Register( 1, 'ra', False),
     Register( 2, 'sp', True),
     Register( 3, 'gp', False),

@@ -1,5 +1,6 @@
 from .debug import print_info, print_graph
-from .isa import J, Ret, Branch
+from .isa import J, Ret, Branch, MV
+from .shader import color
 
 class InstInfo:
     def __init__(self, inst):
@@ -13,7 +14,8 @@ class InstInfo:
 
 class Node:
     def __init__(self, reg):
-        self.edge = set()        
+        self.edge = set()
+        self.move = set()
         self.name = reg.abi        
         if reg.abi[0] == 'v':
             self.color = None
@@ -40,20 +42,35 @@ class InstSeq:
 
     def compute_graph(self):
         graph = {}
+        def set_default(r):
+            if r.abi not in graph:
+                graph[r.abi] = Node(r)
+
         def add_link(node_set):
             for x in node_set:
-                if x.abi not in graph:
-                    graph[x.abi] = Node(x)
+                set_default(x)
 
             for x in node_set:
                 for y in node_set:
-                    if x != y:
+                    if x != y and (x.virtual or y.virtual):
                         graph[x.abi].edge.add(y.abi)
                         graph[y.abi].edge.add(x.abi)
 
-        for inst in self.seq:
-            add_link(inst.in_set)
-            add_link(inst.out_set)
+        for info in self.seq:
+            if type(info.inst) is MV:
+                rd, rs = info.inst.rd, info.inst.rs 
+                set_default(rd)
+                set_default(rs)                
+                graph[rd.abi].move.add(rs.abi)
+                graph[rs.abi].move.add(rd.abi)
+                for x in info.out_set:
+                    set_default(x)
+                    if x != rs:
+                        graph[rd.abi].edge.add(x.abi)
+                        graph[x.abi].edge.add(rd.abi)
+            else:
+                add_link(info.out_set)
+
         return graph
 
 def allocate(fun, args):
@@ -76,7 +93,7 @@ def allocate(fun, args):
             code.add_edge(i, i + 1)
         
     live_analysis(code, args)    
-    graph = code.compute_graph()
+    graph = color(code.compute_graph())
 
     if args.debug:
         print_graph(graph, fun.name.rstrip().rstrip(':'))

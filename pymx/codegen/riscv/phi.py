@@ -12,7 +12,7 @@ def remove(cfg):
         while type(code[0]) is Phi:
             phi = code[0]
             for src, label in phi.units:
-                if users.get(src.name, 0) == 1:
+                if users.get(src.name, 0) == 1:                    
                     trans[src.name] = phi.dst.name
                 else:
                     seq, pos = cfg.block[label.label].code, -1
@@ -24,8 +24,13 @@ def remove(cfg):
                         if var == dest and users[var.name] == 1:
                             pos = -2
                     seq.insert(pos, Move(phi.dst, src))
-            code.pop(0)    
+            code.pop(0)        
 
+    ## May be bug
+    for name in trans:
+        while trans[name] in trans:
+            trans[name] = trans[trans[name]]
+    
     for block in cfg.block.values():
         for inst in block.code:
             name = inst.dest().name if inst.dest() else None

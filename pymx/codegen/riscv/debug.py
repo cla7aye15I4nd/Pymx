@@ -11,7 +11,7 @@ def print_info(code):
 
 def print_graph(graph, filename):
     with open(f'{filename}_register.dot', 'w') as f:
-        f.write('graph {\n')
+        f.write('graph {\nremincross=false\n')
         for u in graph:
             if graph[u].color is not None:
                 color = hex(0xffff00 - 0x012033 * graph[u].color)[2:].rjust(6, '0')
@@ -20,5 +20,8 @@ def print_graph(graph, filename):
             for v in graph[u].edge:
                 if u > v:
                     f.write(f'{u}--{v}\n')
+            for v in graph[u].move:
+                if u > v:
+                    f.write(f'{u}--{v}[style=dashed]\n')
         f.write('}\n')
     os.system(f'dot -Tpng {filename}_register.dot -o {filename}_regster.png')

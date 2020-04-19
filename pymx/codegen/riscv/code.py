@@ -80,11 +80,12 @@ def build_func(func, args):
             next_block = cfg.order[i + 1]
         
         fun.add_block(build_block(func.name, block, next_block))
-    
+        
     fun.replace()
     fun.simpify()
     allocate(fun, args)
 
+    fun.replace()
     return fun
 
 def build_block(name, block, next_blk):

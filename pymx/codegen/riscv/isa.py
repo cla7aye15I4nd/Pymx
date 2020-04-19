@@ -365,14 +365,14 @@ class BLEZ(BGE):
         super().__init__(zero, rs, offset)
 
     def __str__(self):
-        return f'  bge {self.rs2}, {self.offset}\n'
+        return f'  blez {self.rs2}, {self.offset}\n'
 
 class BGEZ(BGE):
     def __init__(self, rs, offset):
         super().__init__(rs, zero, offset)
 
     def __str__(self):
-        return f'  bge {self.rs1}, {self.offset}\n'
+        return f'  bgez {self.rs1}, {self.offset}\n'
 
 class BLTZ(BLT):
     def __init__(self, rs, offset):
