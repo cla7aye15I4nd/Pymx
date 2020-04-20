@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pymx.fakecode.inst import Phi, Move, Logic, Branch
 from .context import ctx
 
@@ -13,14 +14,12 @@ def remove(cfg):
         code = block.code
         while type(code[0]) is Phi:
             phi = code[0]
-            for src, label in phi.units:
-                # if users.get(src.name, 0) == 1:                    
-                #     trans[src.name] = phi.dst.name
+            for src, label in phi.units:                
                 moves[label.label].append((phi.dst, src))
             code.pop(0)
 
     for label, move in moves.items():
-        mv = topsort(cfg, move)
+        mv = topsort(cfg, move, trans)
         seq, pos = cfg.block[label].code, -1
         if (len(seq) > 1 and 
                 type(seq[-1]) is Branch and 
@@ -32,19 +31,19 @@ def remove(cfg):
         cfg.block[label].code = seq[:pos] + mv + seq[pos:]
             
     ## Copy propagation
-    # for name in trans:
-    #     while trans[name] in trans:
-    #         trans[name] = trans[trans[name]]
+    for name in trans:
+        while trans[name] in trans:
+            trans[name] = trans[trans[name]]        
     
-    # for block in cfg.block.values():
-    #     for inst in block.code:
-    #         name = inst.dest().name if inst.dest() else None
-    #         if name in trans:
-    #             inst.dst.name = trans[name]
+    for block in cfg.block.values():
+        for inst in block.code:
+            name = inst.dest().name if inst.dest() else None
+            if name in trans:
+                inst.dst.name = trans[name]
 
     return trans
 
-def topsort(cfg, edges):
+def topsort(cfg, edges, trans):
     deg_in, graph = {}, {}    
     for u, v in edges:        
         deg_in[v] = deg_in.get(v, 0) + 1
@@ -53,6 +52,13 @@ def topsort(cfg, edges):
         graph[v] = graph.get(v, [])
     mv = []
     flag = True    
+
+    copy_graph = deepcopy(graph)
+    for dst in graph:
+        for src in copy_graph[dst]:
+            if ctx.users.get(src.name, 0) == 1 and not copy_graph[src]:
+                trans[src.name] = dst.name
+                graph[dst].remove(src)
 
     while flag:
         node_list = [u for u in graph if graph[u] and deg_in[u] == 0]        
