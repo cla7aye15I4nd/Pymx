@@ -150,7 +150,7 @@ def check_var(chk, var:Var):
         raise CompilerError('{} has not been define'.format(var.name.text), range=var.name.range)
     var.name.text = scope_var.var_name.text
     var.type = scope_var.var_type
-    if d == 2 and ctx.cur_struct:        
+    if d == 2 and ctx.cur_struct:    
         this = This(None)
         this.type = PointerType(kind=ctx.cur_struct.name.text)
         
@@ -167,9 +167,12 @@ def check_access(chk, access:Access):
     if access.expr.type != ArrayType():
         raise CompilerError('{} is not array'.format(access.expr.type), range=access.sign.range)
         
+    scale = []
     for expr in access.scale:
-        expr.check(chk)
+        scale.append(expr.check(chk))
         type_equal_check(access.sign, expr.type, IntegerType())
+    
+    access.scale = scale
 
     if access.expr.type:
         vtype = access.expr.type
