@@ -138,8 +138,8 @@ tests/
 sample.ll
 codegen.bash
 copy.ll
-cfg.dot
-cfg.png
+cfg*.dot
+cfg*.png
 domin.dot
 domin.png
 a.out
