@@ -99,7 +99,7 @@ def check_decl(chk, decl:Decl):
         check_var_name(decl.var_name)
     
         if decl.var_expr:
-            decl.expr = do_check(chk, decl.var_expr)
+            decl.var_expr = do_check(chk, decl.var_expr)
             if decl.var_expr.type:
                 type_equal_check(decl.sign, decl.var_expr.type, decl.var_type)
         

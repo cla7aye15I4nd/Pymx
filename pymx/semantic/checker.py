@@ -64,6 +64,13 @@ def check_struct(chk, struct:Struct):
             func.check(chk)
         if struct.construct:
             struct.construct.check(chk)
+            new_stmts = []
+            for stmt in struct.construct.stmts:
+                new_stmts.append(stmt.check(chk))            
+                
+            if not new_stmts or type(new_stmts[-1]) is not Return:
+                new_stmts.append(Return(None, None))
+            struct.construct.stmts = new_stmts
         ctx.cur_struct = None
 
 def check_function_name(name):

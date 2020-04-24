@@ -1,3 +1,4 @@
+from pymx.types import VoidType
 from ..fakecode import Prog, Func, Union, Global, Reg, Label
 from ..fakecode.types import cast
 from ..fakecode.inst import Alloca, Store
@@ -28,10 +29,14 @@ def build_program(bd, prog:Program) -> Prog:
     
     for struct in prog.structs.values():
         union = ctx.struct[struct.name.text]        
-        for func in struct.functions.values():
+        for func in struct.functions.values():            
             func.name.text = f'_{union.name}_{func.name.text}'
             ptype = PointerType(kind=struct.name.text)
             func.params = [Decl(None, ptype, Token(None, '_this'))] + func.params
+            obj.add_function(func.build(bd))
+        if struct.construct:
+            ptype = PointerType(kind=struct.name.text)
+            func = Function(VoidType(), Token(None, f'_{union.name}'), [Decl(None, ptype, Token(None, '_this'))], struct.construct)
             obj.add_function(func.build(bd))
 
     for func in prog.functions.values():
