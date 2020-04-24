@@ -29,10 +29,14 @@ void println(char* str) {
 
 void printInt(int x) {
   char buf[64], *top = buf;
-  while (x) {
+  if (x < 0) {
+    putchar('-');
+    x = -x;
+  }
+  do {
     *top++ = x % 10;
     x /= 10;
-  }
+  } while(x);
 
   while (top != buf) 
     putchar(*--top + '0');

@@ -98,12 +98,20 @@ printInt:                               # @printInt
 	sw	a0, -12(s0)
 	addi	a0, s0, -80
 	sw	a0, -88(s0)
-	j	.LBB2_1
-.LBB2_1:                                # =>This Inner Loop Header: Depth=1
 	lw	a0, -12(s0)
-	beqz	a0, .LBB2_3
+	addi	a1, zero, -1
+	blt	a1, a0, .LBB2_2
+	j	.LBB2_1
+.LBB2_1:
+	addi	a0, zero, 45
+	call	putchar
+	lw	a0, -12(s0)
+	neg	a0, a0
+	sw	a0, -12(s0)
 	j	.LBB2_2
-.LBB2_2:                                #   in Loop: Header=BB2_1 Depth=1
+.LBB2_2:
+	j	.LBB2_3
+.LBB2_3:                                # =>This Inner Loop Header: Depth=1
 	lw	a0, -12(s0)
 	lui	a1, 419430
 	addi	a1, a1, 1639
@@ -124,23 +132,27 @@ printInt:                               # @printInt
 	srai	a0, a0, 2
 	add	a0, a0, a1
 	sw	a0, -12(s0)
-	j	.LBB2_1
-.LBB2_3:
 	j	.LBB2_4
-.LBB2_4:                                # =>This Inner Loop Header: Depth=1
+.LBB2_4:                                #   in Loop: Header=BB2_3 Depth=1
+	lw	a0, -12(s0)
+	bnez	a0, .LBB2_3
+	j	.LBB2_5
+.LBB2_5:
+	j	.LBB2_6
+.LBB2_6:                                # =>This Inner Loop Header: Depth=1
 	lw	a0, -88(s0)
 	addi	a1, s0, -80
-	beq	a0, a1, .LBB2_6
-	j	.LBB2_5
-.LBB2_5:                                #   in Loop: Header=BB2_4 Depth=1
+	beq	a0, a1, .LBB2_8
+	j	.LBB2_7
+.LBB2_7:                                #   in Loop: Header=BB2_6 Depth=1
 	lw	a0, -88(s0)
 	addi	a1, a0, -1
 	sw	a1, -88(s0)
 	lb	a0, -1(a0)
 	addi	a0, a0, 48
 	call	putchar
-	j	.LBB2_4
-.LBB2_6:
+	j	.LBB2_6
+.LBB2_8:
 	lw	s0, 88(sp)
 	.cfi_def_cfa sp, 96
 	lw	ra, 92(sp)
