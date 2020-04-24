@@ -230,7 +230,10 @@ def build_access(bd, access:Access):
 
         if count + 1 == len(access.scale) and access.lhs:
             return addr
-        nptr = ctx.get_var(Type(32, 4))
+        if access.type != BoolType():
+            nptr = ctx.get_var(Type(32, 4))
+        else:
+            nptr = ctx.get_var(Type(8, 4))
         ctx.add(Load(addr, nptr))
         ptr = nptr
     return ptr
@@ -243,7 +246,7 @@ def build_funccall(bd, funcall:FuncCall):
             if (type(par) is FuncCall and 
                     type(par.expr) is Var and 
                         par.expr.name == 'toString'):                
-                func.name.text = 'printInt' if func.name == 'print' else '__printIntLn'
+                func.name.text = 'printInt' if func.name == 'print' else 'printlnInt'
                 funcall.params = par.params
 
         regs = []

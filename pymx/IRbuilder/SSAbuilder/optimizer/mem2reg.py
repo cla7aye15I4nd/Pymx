@@ -34,7 +34,7 @@ def rename_pass(cfg, phi_map, domin):
                 phi = phi_map[alloc][u]
                 phi.units.append((deepcopy(incoming_vals[alloc]), Label(pred)))
     
-    def handle_inst(block, incoming_vals, incoming_glos):
+    def handle_inst(block, incoming_vals):
         if block.label in block_phi:
             for name in block_phi[block.label]:
                 phi = phi_map[name][block.label]
@@ -43,20 +43,7 @@ def rename_pass(cfg, phi_map, domin):
         for inst in list(block.code):
             if type(inst) is Load:
                 src = inst.src.name
-                if inst.src.is_global():
-                    if src not in incoming_glos:
-                        incoming_glos[src] = inst.dst                        
-                    else:
-                        val = incoming_glos[src]
-                        block.code.remove(inst)                
-                        for body, attr in inst.user:
-                            if type(body) in [Call, Malloc]:
-                                body.params[attr] = deepcopy(val)
-                            elif type(body) is Phi:
-                                body.units[attr] = (deepcopy(val), body.units[attr][1])                                
-                            else:
-                                setattr(body, attr, deepcopy(val))                        
-                elif src in incoming_vals:                                        
+                if src in incoming_vals:                                        
                     val = incoming_vals[src]
                     block.code.remove(inst)                
                     for body, attr in inst.user:
@@ -69,16 +56,13 @@ def rename_pass(cfg, phi_map, domin):
 
             if type(inst) is Store:
                 dst = inst.dst.name
-                if inst.dst.is_global():
-                    incoming_glos[dst] = inst.src
-                    continue
                 if dst not in phi_map:
                     continue
 
                 incoming_vals[dst] = inst.src
                 block.code.remove(inst)
     
-    def _rename_pass(u, pred, incoming_vals, incoming_glos):
+    def _rename_pass(u, pred, incoming_vals):
         visit_succ = set()
         while True:
             handle_phi(u, pred)
@@ -86,7 +70,7 @@ def rename_pass(cfg, phi_map, domin):
                 return
             
             visited.add(u)
-            handle_inst(cfg.block[u], incoming_vals, incoming_glos)
+            handle_inst(cfg.block[u], incoming_vals)
 
             next_node = None            
             for i, v in enumerate(cfg.block[u].edges):
@@ -95,25 +79,23 @@ def rename_pass(cfg, phi_map, domin):
                 elif v not in visit_succ:
                     visit_succ.add(v)
                     if v in domin.succ[u]:                    
-                        work_list.append((v, u, deepcopy(incoming_vals), deepcopy(incoming_glos)))
+                        work_list.append((v, u, deepcopy(incoming_vals)))
                     else:
-                        work_list.append((v, u, deepcopy(incoming_vals), {}))
+                        work_list.append((v, u, deepcopy(incoming_vals)))
             
             if next_node is None:
                 return
-            if next_node not in domin.succ[u]:
-                incoming_glos = {}
             
             pred = u
             u = next_node            
     
     cfg.compte_load_ref()
     incoming_vals = {key : Const(cfg.defs[key].dst.type, 0) for key in phi_map}
-    work_list.append((0, None, deepcopy(incoming_vals), {}))
+    work_list.append((0, None, deepcopy(incoming_vals)))
 
     while work_list:
-        u, pred, incoming_vals, incoming_glos = work_list.pop()
-        _rename_pass(u, pred, incoming_vals, incoming_glos)
+        u, pred, incoming_vals = work_list.pop()
+        _rename_pass(u, pred, incoming_vals)
 
     for alloc in phi_map:
         for blk in phi_map[alloc]:

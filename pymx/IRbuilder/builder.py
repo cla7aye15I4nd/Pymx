@@ -17,11 +17,9 @@ def build_program(bd, prog:Program) -> Prog:
     obj = Prog()
 
     obj.vars = build_global_variable(bd, prog)
-    func = Func(Type(0, 1), '__init_static')
-    func.append(ctx.code)
-    func.append(Ret())
-    
-    obj.add_function(func)
+    init = Func(Type(0, 1), '__main')
+    init.append(ctx.code)
+    init.append(Ret())    
 
     for struct in prog.structs.values():
         struct = struct.build(bd)
@@ -39,6 +37,7 @@ def build_program(bd, prog:Program) -> Prog:
     for func in prog.functions.values():
         obj.add_function(func.build(bd))    
 
+    obj.add_function(init)
     obj.vars += ctx.gvar
     return obj
 
