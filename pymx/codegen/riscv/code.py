@@ -5,9 +5,9 @@ from . import generator, phi
 
 from .context import ctx
 from .simpify import simpify
-from .register import register
+from .register import register, ra, VirtualRegister
 from .allocator import allocate
-from .isa import CALL, TAIL, Ret
+from .isa import CALL, TAIL, Ret, MV
 
 class FunctionBlock:
     def __init__(self, name):
@@ -15,8 +15,16 @@ class FunctionBlock:
         self.blocks = {}
         self.block = []
         self.setup = []
+        self.return_adderss = None
+
 
     def add_block(self, block):
+        for idx, inst in enumerate(list(block.code)):
+            if type(inst) is Ret:
+                block.code.insert(idx, MV(ra, self.return_adderss))
+                break
+        if not self.block:
+            block.code.insert(0, MV(self.return_adderss, ra))
         self.blocks[block.label] = block
         self.block.append(block)
 
@@ -63,9 +71,12 @@ class BasicBlock:
         return self.label + ':\n' + ''.join([inst.__str__() for inst in self.code])
 
 def build_func(func, args):
-    fun = FunctionBlock(func.name)
-    cfg = build_CFG(func)
     ctx.clear()
+    cfg = build_CFG(func)
+    fun = FunctionBlock(func.name)
+        
+    fun.return_adderss = VirtualRegister(cfg.count + 1)
+    ctx.regcount = cfg.count + 2
 
     trans = phi.remove(cfg)
     if args.debug:
@@ -94,7 +105,6 @@ def build_func(func, args):
             next_block = cfg.order[i + 1]
         
         fun.add_block(build_block(func.name, block, next_block))
-        
     fun.replace()    
     allocate(fun, args)
 

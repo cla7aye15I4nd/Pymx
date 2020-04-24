@@ -233,7 +233,7 @@ def generate_call(g, obj):
         else:
             res.append(MV(r, vr(par)))
 
-    res.append(CALL(obj.name))
+    res.append(CALL(obj.name, len(obj.params)))
     if obj.dst:
         res.append(MV(vr(obj.dst), a0))
     return res
@@ -247,7 +247,7 @@ def generate_malloc(g, obj):
     else:
         res.append(MV(a0, vr(par)))
 
-    res.append(CALL('malloc'))
+    res.append(CALL('malloc', 1))
     res.append(MV(vr(obj.dst), a0))
     return res
 

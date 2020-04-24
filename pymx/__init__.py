@@ -54,14 +54,14 @@ def process_file(args):
     if not error_collector.ok() or args.syntax_only:
         return None
 
-    ir = IRbuild(tree, args)
-    asm = riscv.build(ir, args)
+    ir = IRbuild(tree, args)    
 
     if args.ir_file:
         write_file(args.ir_file, ir.__str__())
+
+    asm = riscv.build(ir, args)
     if args.asm_file:
-        write_file(args.asm_file, asm.__str__())
-    
+        write_file(args.asm_file, asm.__str__())    
 
 def write_file(file, text):
     try:

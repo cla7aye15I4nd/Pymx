@@ -31,7 +31,7 @@ register = [
     Register( 1, 'ra', False),
     Register( 2, 'sp', True),
     Register( 3, 'gp', False),
-    Register( 4, 'yp', False),
+    Register( 4, 'tp', False),
     Register( 5, 't0', False),
     Register( 6, 't1', False),
     Register( 7, 't2', False),
@@ -60,6 +60,8 @@ register = [
     Register(30, 't5', False),
     Register(31, 't6', False),
 ]
+
+temporary = {r for r in register if not r.preserved}
 
 zero = register[0]
 ra = register[1]

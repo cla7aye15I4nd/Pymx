@@ -1,4 +1,5 @@
-from .register import zero, ra, x6
+from .register import zero, ra, x6, a0
+from .register import temporary, register
 
 # Instruction Base Object
 class Instruction:
@@ -437,22 +438,30 @@ class Ret(JALR):
     def __str__(self):
         return '  ret\n'
 
+    def use_set(self):
+        return {ra, a0}
+
 class CALL(JALR):
-    def __init__(self, offset):
+    def __init__(self, offset, count):
         super().__init__(ra, x6, offset)
+        self.count = count
 
     def __str__(self):
         return f'  call {self.offset}\n'
 
-    def def_set(self):
-        return {ra, x6}
+    def def_set(self):   
+        return temporary
+
+    def use_set(self):
+        return {register[idx] for idx in range(10, 10 + self.count)}
 
 class TAIL(JALR):
-    def __init__(self, offset):
+    def __init__(self, offset, count):
         super().__init__(zero, x6, offset)
+        self.count = count
 
     def __str__(self):
         return f'  tail {self.offset}\n'
 
     def def_set(self):
-        return {ra, x6}
+        return temporary

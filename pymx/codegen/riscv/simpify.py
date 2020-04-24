@@ -23,7 +23,7 @@ def tail_call_optimize(bb):
         inst = bb.code[i]
         last = bb.code[i-1]
         if type(inst) is Ret and type(last) is CALL:
-            bb.code[i-1] = TAIL(last.offset)
+            bb.code[i-1] = TAIL(last.offset, inst.count)
             bb.code.remove(inst)
         else:
             i += 1

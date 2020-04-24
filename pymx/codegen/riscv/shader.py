@@ -16,7 +16,7 @@ def sample_shader(graph, complete):
         name = node.name
         adjust = {graph[n].color for n in node.edge if graph[n].color}
         for r in complete + register[5:]:
-            if r.idx not in adjust and r.preserved:
+            if r.idx not in adjust:
                 ctx.regfile[name] = r
                 node.color = r.idx                
                 break
