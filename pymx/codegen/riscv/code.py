@@ -16,7 +16,7 @@ class FunctionBlock:
         self.block = []
         self.setup = []
         self.start_block = BasicBlock(name, 'S')
-        self.return_block = None
+        self.return_block = []
         self.return_adderss = None   
 
         self.add_block(self.start_block)     
@@ -24,9 +24,8 @@ class FunctionBlock:
     def add_block(self, block):        
         for idx, inst in enumerate(list(block.code)):
             if type(inst) is Ret:
-                block.code.insert(idx, MV(ra, self.return_adderss))
-                assert(self.return_block is None)
-                self.return_block = block
+                block.code.insert(idx, MV(ra, self.return_adderss))                
+                self.return_block.append(block)
                 break
         self.blocks[block.label] = block
         self.block.append(block)
@@ -134,7 +133,8 @@ def build_func(func, args):
             setup.append(SW(r, sp, ctx.spill_offset[r]))
             uninstall.insert(0, LW(r, sp, ctx.spill_offset[r]))
         
-        fun.return_block.code = fun.return_block.code[:-1] + uninstall + fun.return_block.code[-1:]
+        for rb in fun.return_block:
+            rb.code = rb.code[:-1] + uninstall + rb.code[-1:]
         fun.start_block.code = setup + fun.start_block.code
         
     if fun.name == 'main:\n':
