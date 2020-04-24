@@ -154,12 +154,10 @@ example.ll
 sample.S
 cfg_rmv.dot
 cfg_rmv.png
-sample.riscv
-builtin.s
-test.in
-test.out
-test.s
-*.dot
-*_regster.png
+/builtin.s
+*.riscv
+/test.*
+/*.dot
+/*_regster.png
 
 tools/builtin.ll
