@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -12,9 +11,10 @@ int getInt();
 char* getString();
 char* toString(int);
 
-struct string* _string_substring(struct string*, int, int);
-int _string_parseInt(struct string*);
-int _string_ord(struct string*, int);
+char* _string_substring(char*, int, int);
+int _string_parseInt(char*);
+int _string_ord(char*, int);
+char* _string_add(char*, char*);
 
 void print(char* str) {
   int len = *(int*)(str-4);
@@ -68,18 +68,47 @@ char* getString() {
 char* toString(int x) {
   char buf[64], *top = buf;
 
-  while (x) {
+  do {
     *top++ = x % 10;
     x /= 10;
-  }
+  } while (x);
   
   char*s = (char*) malloc(64);
   *(int*)s = top - buf;
 
   s += 4;
   for (int i = 0; top != buf; i++)
-    s[i] = *--top;
+    s[i] = *--top + '0';
   return s;
 }
 
-//struct string* _string_substring(
+char* _string_substring(char* s, int l, int r) {
+  char* a = (char*) malloc(r - l + 4);
+  *(int*) a = r - l;
+
+  a += 4;
+  for (int i = l; i < r; ++i)
+    a[i - l] = s[i];
+  return a;
+}
+
+int _string_parseInt(char* s) {
+  int x = 0;
+  while (*s >= '0' && *s <= '9') 
+    x = x * 10 + *s++ - '0';
+  return x;
+}
+
+int _string_ord(char* s, int x) {
+  return *(s + x);
+}
+
+char* _string_add(char *a, char* b) {
+  int len_a = *(int *)(a - 4);
+  int len_b = *(int *)(b - 4);
+  char *c = (char*) malloc(len_a + len_b + 4);
+  *(int *) c = len_a + len_b;
+  strcpy(c + 4, a);
+  strcpy(c + 4 + len_a, b);
+  return c + 4;
+}
