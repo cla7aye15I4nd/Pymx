@@ -67,18 +67,23 @@ char* getString() {
 
 char* toString(int x) {
   char buf[64], *top = buf;
-
+  int flag = 0;
+  if (x < 0) {
+    flag = 1;
+    x = -x;
+  }
   do {
     *top++ = x % 10;
     x /= 10;
   } while (x);
   
   char*s = (char*) malloc(64);
-  *(int*)s = top - buf;
+  *(int*)s = top - buf + flag;
 
   s += 4;
+  if (flag) *s = '-';
   for (int i = 0; top != buf; i++)
-    s[i] = *--top + '0';
+    s[i+flag] = *--top + '0';
   return s;
 }
 

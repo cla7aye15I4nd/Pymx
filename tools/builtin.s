@@ -297,8 +297,21 @@ toString:                               # @toString
 	sw	a0, -12(s0)
 	addi	a0, s0, -80
 	sw	a0, -88(s0)
+	sw	zero, -92(s0)
+	lw	a0, -12(s0)
+	addi	a1, zero, -1
+	blt	a1, a0, .LBB6_2
 	j	.LBB6_1
-.LBB6_1:                                # =>This Inner Loop Header: Depth=1
+.LBB6_1:
+	addi	a0, zero, 1
+	sw	a0, -92(s0)
+	lw	a0, -12(s0)
+	neg	a0, a0
+	sw	a0, -12(s0)
+	j	.LBB6_2
+.LBB6_2:
+	j	.LBB6_3
+.LBB6_3:                                # =>This Inner Loop Header: Depth=1
 	lw	a0, -12(s0)
 	lui	a1, 419430
 	addi	a1, a1, 1639
@@ -319,12 +332,12 @@ toString:                               # @toString
 	srai	a0, a0, 2
 	add	a0, a0, a1
 	sw	a0, -12(s0)
-	j	.LBB6_2
-.LBB6_2:                                #   in Loop: Header=BB6_1 Depth=1
+	j	.LBB6_4
+.LBB6_4:                                #   in Loop: Header=BB6_3 Depth=1
 	lw	a0, -12(s0)
-	bnez	a0, .LBB6_1
-	j	.LBB6_3
-.LBB6_3:
+	bnez	a0, .LBB6_3
+	j	.LBB6_5
+.LBB6_5:
 	addi	a0, zero, 64
 	mv	a1, zero
 	call	malloc
@@ -332,19 +345,30 @@ toString:                               # @toString
 	lw	a0, -88(s0)
 	addi	a1, s0, -80
 	sub	a0, a0, a1
+	lw	a1, -92(s0)
+	add	a0, a0, a1
 	lw	a1, -96(s0)
 	sw	a0, 0(a1)
 	lw	a0, -96(s0)
 	addi	a0, a0, 4
 	sw	a0, -96(s0)
+	lw	a0, -92(s0)
+	beqz	a0, .LBB6_7
+	j	.LBB6_6
+.LBB6_6:
+	lw	a0, -96(s0)
+	addi	a1, zero, 45
+	sb	a1, 0(a0)
+	j	.LBB6_7
+.LBB6_7:
 	sw	zero, -100(s0)
-	j	.LBB6_4
-.LBB6_4:                                # =>This Inner Loop Header: Depth=1
+	j	.LBB6_8
+.LBB6_8:                                # =>This Inner Loop Header: Depth=1
 	lw	a0, -88(s0)
 	addi	a1, s0, -80
-	beq	a0, a1, .LBB6_7
-	j	.LBB6_5
-.LBB6_5:                                #   in Loop: Header=BB6_4 Depth=1
+	beq	a0, a1, .LBB6_11
+	j	.LBB6_9
+.LBB6_9:                                #   in Loop: Header=BB6_8 Depth=1
 	lw	a0, -88(s0)
 	addi	a1, a0, -1
 	sw	a1, -88(s0)
@@ -352,15 +376,17 @@ toString:                               # @toString
 	addi	a0, a0, 48
 	lw	a1, -96(s0)
 	lw	a2, -100(s0)
+	lw	a3, -92(s0)
+	add	a2, a2, a3
 	add	a1, a1, a2
 	sb	a0, 0(a1)
-	j	.LBB6_6
-.LBB6_6:                                #   in Loop: Header=BB6_4 Depth=1
+	j	.LBB6_10
+.LBB6_10:                               #   in Loop: Header=BB6_8 Depth=1
 	lw	a0, -100(s0)
 	addi	a0, a0, 1
 	sw	a0, -100(s0)
-	j	.LBB6_4
-.LBB6_7:
+	j	.LBB6_8
+.LBB6_11:
 	lw	a0, -96(s0)
 	lw	s0, 104(sp)
 	.cfi_def_cfa sp, 112
