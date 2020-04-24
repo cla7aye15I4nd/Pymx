@@ -12,17 +12,16 @@ def optimize(cfg):
 
 def control_flow_optimize(cfg):
     flag = True
-
     while flag:
         flag = False
         cfg.compute_label_ref()
 
-        if not flag:
-            flag = erase_useless_block(cfg)
+        if not flag:            
+            flag = erase_useless_block(cfg)        
         if not flag:
             flag = combine_block(cfg)
         if not flag:
-            flag = eliminate_useless_jump(cfg)
+            flag = eliminate_useless_jump(cfg)        
 
 def eliminate_alloc(cfg):
     flag = True
@@ -110,13 +109,14 @@ def eliminate_useless_jump(cfg):
             tar = cfg.block[inst.label.label].head_jump
             
             if tar is not None and tar not in block.edges:
-                flag = True                                
-                replace_phi_label(inst.label.label, src, tar)
-                inst.label.label = tar # src -> tar
-                block.edges = [tar]
-                if len(block.code) == 1:
-                    block.head_jump = tar
-                return flag
+                if type(cfg.block[tar].code[0]) is not Phi:
+                    flag = True                                
+                    replace_phi_label(inst.label.label, src, tar)
+                    inst.label.label = tar # src -> tar
+                    block.edges = [tar]
+                    if len(block.code) == 1:
+                        block.head_jump = tar
+                    return flag
                     
     return flag
 

@@ -83,8 +83,8 @@ def build_func(func, args):
     
     fun = FunctionBlock(func.name)
     
-    ctx.regcount = cfg.count + 2    
-    fun.return_adderss = VirtualRegister(cfg.count + 1)
+    cfg.count += 1
+    fun.return_adderss = VirtualRegister(cfg.count)
     fun.start_block.code.append(MV(fun.return_adderss, ra))
     
     cur = 9
@@ -94,6 +94,7 @@ def build_func(func, args):
         fun.start_block.code.append(MV(ctx.params[i], register[cur]))
     
     phi.remove(cfg)
+    ctx.regcount = cfg.count + 2
     if args.debug:
         cfg.compute_graph()
         print_cfg(cfg, f'cfg_{func.name}_rmv')        
