@@ -24,7 +24,7 @@ class VirtualRegister(Register):
         else:
             idx = int(reg.name[1:])
             abi = 'v' + reg.name[1:]
-        super().__init__(idx, abi, True, True)
+        super().__init__(idx, abi, False, True)
 
 register = [        
     Register( 0, 'zero', True),

@@ -5,9 +5,9 @@ from . import generator, phi
 
 from .context import ctx
 from .simpify import simpify
-from .register import register, ra, VirtualRegister
+from .register import register, ra, sp, VirtualRegister
 from .allocator import allocate
-from .isa import CALL, TAIL, Ret, MV
+from .isa import CALL, TAIL, Ret, MV, ADDI, SW, LW
 
 class FunctionBlock:
     def __init__(self, name):
@@ -15,17 +15,23 @@ class FunctionBlock:
         self.blocks = {}
         self.block = []
         self.setup = []
+        self.start_block = None
+        self.return_block = None
         self.return_adderss = None
-
 
     def add_block(self, block):
         for idx, inst in enumerate(list(block.code)):
             if type(inst) is Ret:
                 block.code.insert(idx, MV(ra, self.return_adderss))
+                assert(self.return_block is None)
+                self.return_block = block
                 break
         if not self.block:
             block.code.insert(0, MV(self.return_adderss, ra))
         self.blocks[block.label] = block
+
+        if not self.block:
+            self.start_block = block
         self.block.append(block)
 
     def simpify(self):
@@ -111,17 +117,37 @@ def build_func(func, args):
             next_block = cfg.order[i + 1]
         
         fun.add_block(build_block(func.name, block, next_block))
-    fun.replace()    
+    fun.replace()
     allocate(fun, args)
 
     fun.replace()
-    fun.simpify()
-
+    
+    preserve = set()
+    for block in fun.block:
+        for inst in block.code:
+            for reg in inst.preserve():
+                if reg not in ctx.spill_offset:
+                    ctx.spill(reg)
+                    preserve.add(reg)
+    
+    if ctx.spill_offset:
+        offset = max(ctx.spill_offset.values()) + 4
+        
+        setup = [ADDI(sp, sp, -offset)]
+        uninstall = [ADDI(sp, sp, +offset)]
+        for r in preserve:
+            setup.append(SW(r, sp, ctx.spill_offset[r]))
+            uninstall.insert(0, LW(r, sp, ctx.spill_offset[r]))
+        
+        fun.return_block.code = fun.return_block.code[:-1] + uninstall + fun.return_block.code[-1:]
+        fun.start_block.code = setup + fun.start_block.code
+    
     if fun.name == 'main:\n':
         for block in fun.block:
             if type(block.code[-1]) is Ret:
                 block.code[-1] = TAIL('__main', 0)
                 break
+    fun.simpify()
 
     return fun
 

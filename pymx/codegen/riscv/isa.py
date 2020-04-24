@@ -12,6 +12,9 @@ class Instruction:
     def use_set(self):
         return {getattr(self, n) for n in ['rs', 'rs1', 'rs2'] if hasattr(self, n)}
 
+    def preserve(self):
+        return {getattr(self, 'rd')} if hasattr(self, 'rd') and getattr(self, 'rd').preserved else set()
+
     def replace(self, regfile):
         def replace_hook(reg):
             if not reg.virtual:
@@ -441,6 +444,9 @@ class Ret(JALR):
     def use_set(self):
         return {ra, a0}
 
+    def preserve(self):
+        return set()
+
 class CALL(JALR):
     def __init__(self, offset, count):
         super().__init__(ra, x6, offset)
@@ -454,6 +460,9 @@ class CALL(JALR):
 
     def use_set(self):
         return {register[idx] for idx in range(10, 10 + self.count)}
+    
+    def preserve(self):
+        return set()
 
 class TAIL(JALR):
     def __init__(self, offset, count):
@@ -465,3 +474,6 @@ class TAIL(JALR):
 
     def def_set(self):
         return temporary
+
+    def preserve(self):
+        return set()

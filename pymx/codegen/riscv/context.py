@@ -9,9 +9,10 @@ class Context:
         self.name = ''
         self.code = []
         self.users = {}
-        self.parnum = 0
-        self.regfile = {}        
+        self.parnum = 0        
+        self.regfile = {}
         self.regcount = 0
+        self.spill_offset = {}
         self.next_block = -1
 
     def add_vr(self, inst):
@@ -28,6 +29,17 @@ class Context:
     def book_reg(self, reg, pv):
         name = 'v' + reg.name[1:]
         self.regfile[name] = pv
+
+    def spill(self, reg):
+        if reg in self.spill_offset:
+            return self.spill_offset[reg]
+        
+        offset = 0
+        if self.spill_offset:
+            offset = max(self.spill_offset.values()) + 4
+        
+        self.spill_offset[reg] = offset
+        return offset
 
     def pop_front(self):
         self.cur = 0
