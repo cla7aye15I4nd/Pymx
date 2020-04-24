@@ -29,36 +29,18 @@ def remove(cfg):
             if var == dst and users[var.name] == 1:
                 pos = -2
         cfg.block[label].code = seq[:pos] + mv + seq[pos:]
-            
-    ## Copy propagation
-    for name in trans:
-        while trans[name] in trans:
-            trans[name] = trans[trans[name]]        
-    
-    for block in cfg.block.values():
-        for inst in block.code:
-            name = inst.dest().name if inst.dest() else None
-            if name in trans:
-                inst.dst.name = trans[name]
 
     return trans
 
 def topsort(cfg, edges, trans):
     deg_in, graph = {}, {}    
-    for u, v in edges:        
+    for u, v in edges:                
         deg_in[v] = deg_in.get(v, 0) + 1
         deg_in[u] = deg_in.get(u, 0)
         graph[u] = graph.get(u, []) + [v]
         graph[v] = graph.get(v, [])
     mv = []
     flag = True    
-
-    copy_graph = deepcopy(graph)
-    for dst in graph:
-        for src in copy_graph[dst]:
-            if ctx.users.get(src.name, 0) == 1 and not copy_graph[src]:
-                trans[src.name] = dst.name
-                graph[dst].remove(src)
 
     while flag:
         node_list = [u for u in graph if graph[u] and deg_in[u] == 0]        

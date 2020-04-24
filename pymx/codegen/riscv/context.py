@@ -7,11 +7,11 @@ class Context:
     def clear(self):
         self.cur = 0
         self.name = ''
-        self.code = []
-        self.users = {}
-        self.parnum = 0        
+        self.code = []        
+        self.users = {}        
+        self.params = []
         self.regfile = {}
-        self.regcount = 0
+        self.regcount = 0        
         self.spill_offset = {}
         self.next_block = -1
 

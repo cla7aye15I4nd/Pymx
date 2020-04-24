@@ -15,23 +15,20 @@ class FunctionBlock:
         self.blocks = {}
         self.block = []
         self.setup = []
-        self.start_block = None
+        self.start_block = BasicBlock(name, 'S')
         self.return_block = None
-        self.return_adderss = None
+        self.return_adderss = None   
 
-    def add_block(self, block):
+        self.add_block(self.start_block)     
+
+    def add_block(self, block):        
         for idx, inst in enumerate(list(block.code)):
             if type(inst) is Ret:
                 block.code.insert(idx, MV(ra, self.return_adderss))
                 assert(self.return_block is None)
                 self.return_block = block
                 break
-        if not self.block:
-            block.code.insert(0, MV(self.return_adderss, ra))
         self.blocks[block.label] = block
-
-        if not self.block:
-            self.start_block = block
         self.block.append(block)
 
     def simpify(self):
@@ -43,7 +40,7 @@ class FunctionBlock:
                 self.blocks.pop(bb.label)
 
     def replace(self):
-        for block in self.block:
+        for block in self.block:            
             for inst in block.code:
                 inst.replace(ctx.regfile)
 
@@ -86,30 +83,29 @@ def build_func(func, args):
         func.name = 'main'    
     
     fun = FunctionBlock(func.name)
-        
-    fun.return_adderss = VirtualRegister(cfg.count + 1)
+    
     ctx.regcount = cfg.count + 2    
-
-    trans = phi.remove(cfg)
+    fun.return_adderss = VirtualRegister(cfg.count + 1)
+    fun.start_block.code.append(MV(fun.return_adderss, ra))
+    
+    cur = 9
+    for i in range(len(func.params)):
+        cur += 1
+        ctx.params.append(VirtualRegister(i))
+        fun.start_block.code.append(MV(ctx.params[i], register[cur]))
+    
+    phi.remove(cfg)
     if args.debug:
         cfg.compute_graph()
-        print_cfg(cfg, 'cfg_rmv')
+        print_cfg(cfg, f'cfg_{func.name}_rmv')        
 
     for block in cfg.block.values():
         for inst in block.code:
             ctx.add_vr(inst)
-
-    ctx.parnum = len(func.params)
-    for i in range(ctx.parnum):
-        name = f'%{i}'
-        vname = f'v{i}'
-        if name in trans:
-            vname = trans[name]
-            vname = vname.replace('%', 'v')            
-        ctx.regfile[vname] = register[i + 10]
-
+    
     ctx.name = func.name
     size = len(cfg.order)
+    
     for i, blk in enumerate(cfg.order):
         block = cfg.block[blk]
         next_block = -1
