@@ -177,8 +177,8 @@ def malloc(bd, creator:Creator, d:int):
     tmp = ctx.get_var(Type(32, 4))
     reg = ctx.get_var(Type(32, 4))
 
-    if creator.basetype == BoolType():
-        ctx.add(Arith(tmp, '*', cap, Const(Type(32, 4), 1)))
+    if flag and creator.basetype == BoolType():
+        tmp = cap
     else:
         ctx.add(Arith(tmp, '*', cap, Const(Type(32, 4), 4)))
     ctx.add(Arith(reg, '+', tmp, Const(Type(32, 4), 4)))
@@ -194,22 +194,29 @@ def malloc(bd, creator:Creator, d:int):
     
     it = ctx.get_var(Type(32, 4))
     ctx.add(Alloca(it))
-    ctx.add(Store(Const(Type(32, 4), 1), it))
+    ctx.add(Store(Const(Type(32, 4), 4), it))
 
     true = ctx.get_label()
     start, end = ctx.enter_loop()
     cmp = ctx.get_var(Type(8, 1))
     
     ctx.add(start)
-    ctx.add(Logic(cmp, '<=', it, cap))
+    cur_it = ctx.get_var(Type(32, 4))
+    ctx.add(Load(it, cur_it))
+    ctx.add(Logic(cmp, '<', cur_it, reg))
     ctx.add(Branch(cmp, true, end))
     
     ctx.add(true)
     ext = malloc(bd, creator, d + 1)
     
     off = ctx.get_var(Type(32, 4))
-    ctx.add(Arith(off, '+', ptr, it))
+    ctx.add(Arith(off, '+', ptr, cur_it))
     ctx.add(Store(ext, off))
+
+    next_it = ctx.get_var(Type(32, 4))
+    ctx.add(Arith(next_it, '+', cur_it, Const(Type(32, 4), 4)))
+    ctx.add(Store(next_it, it))
+    ctx.add(Jump(start))
 
     ctx.add(end)
     ctx.exit_loop()
