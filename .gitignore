@@ -162,3 +162,4 @@ test.s
 *.dot
 *_regster.png
 
+tools/builtin.ll
