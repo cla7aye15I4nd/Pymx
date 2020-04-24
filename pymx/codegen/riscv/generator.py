@@ -78,10 +78,8 @@ def generate_ret(g, obj):
         if type(obj.reg) is Const:
             res.append(LI(a0, obj.reg.name))
         else:
-            if ctx.parnum:
-                res.append(MV(a0, vr(obj.reg)))
-            else:
-                ctx.book_reg(obj.reg, a0)
+            res.append(MV(a0, vr(obj.reg)))
+            
     return res + [Ret()]
 
 def generate_arith(g, obj):
