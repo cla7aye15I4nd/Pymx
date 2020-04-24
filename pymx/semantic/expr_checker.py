@@ -195,6 +195,9 @@ def check_funccall(chk, funcall:FuncCall):
         token = funcall.expr.name
         if (ctx.cur_struct and token.text in ctx.cur_struct.functions):
             func = ctx.cur_struct.functions[token.text]
+            this = This(None)
+            this.type = PointerType(kind=ctx.cur_struct.name.text)
+            funcall.expr = Dot(None, this, funcall.expr)
         elif token.text in ctx.cur_prog.functions:
             func = ctx.cur_prog.functions[token.text]
         elif token.text in ctx.cur_prog.builtin:
