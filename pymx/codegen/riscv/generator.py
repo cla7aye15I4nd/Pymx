@@ -217,12 +217,15 @@ def generate_branch_inst(op, lv, rv, offset):
         }[op](lv, rv, offset)
 
 def generate_call(g, obj):
-    res = []
+    res, reg = [], []
 
     cur = 9
     for par in obj.params:
         cur += 1
         r = register[cur]
+        rv = ctx.get_vr()
+        res.append(MV(rv, r))
+        reg.append(rv)
         if type(par) is Const:
             res.append(LI(r, par.name))
         elif par.name[0] == '@':
@@ -231,11 +234,17 @@ def generate_call(g, obj):
             res.append(LUI(rv, f'%hi({name})'))
             res.append(LW(r, rv, f'%lo({name})'))
         else:
-            res.append(MV(r, vr(par)))
+            res.append(MV(r, vr(par)))        
 
     res.append(CALL(obj.name, len(obj.params)))
+
+    cur = 9
     if obj.dst:
         res.append(MV(vr(obj.dst), a0))
+    for rv in reg:
+        cur += 1
+        r = register[cur]
+        res.append(MV(r, rv))
     return res
 
 def generate_malloc(g, obj):

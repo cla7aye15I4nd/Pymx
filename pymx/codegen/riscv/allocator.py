@@ -2,6 +2,7 @@ import sys
 from .debug import print_info, print_graph
 from .isa import J, Ret, Branch, MV
 from .shader import color
+from .context import ctx
 
 sys.setrecursionlimit(1000000)
 
@@ -100,18 +101,13 @@ def allocate(fun, args):
             code.add_edge(i, code.tagid[inst.offset])
         if i + 1 < len(code.seq):
             code.add_edge(i, i + 1)
-    live_analysis(code, args)   
+    live_analysis(code, args)
+
     graph = code.compute_graph()
     graph = color(graph)
 
     if args.debug:
         print_graph(graph, fun.name.rstrip().rstrip(':'))
-
-    uses = set()
-    for node in graph.values():
-        if node.color:
-            uses.add(node.color)
-    return uses
 
 def live_analysis(code, args):  
     change = [set() for i in range(len(code.seq))]  

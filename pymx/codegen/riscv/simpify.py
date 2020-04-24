@@ -13,6 +13,8 @@ def erase_useless_move(bb):
         if type(inst) is MV:
             if inst.rs == inst.rd:
                 bb.code.remove(inst)
+            elif type(last) is MV and inst.flag:
+                bb.code.remove(inst)
             elif type(last) is MV and (inst.rs, inst.rd) == (last.rd, last.rs):
                 bb.code.remove(inst)
         last = inst

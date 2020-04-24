@@ -119,9 +119,8 @@ def build_func(func, args):
         fun.add_block(build_block(func.name, block, next_block))
     fun.replace()
     allocate(fun, args)
-
-    fun.replace()
     
+    fun.replace()
     preserve = set()
     for block in fun.block:
         for inst in block.code:
@@ -141,7 +140,7 @@ def build_func(func, args):
         
         fun.return_block.code = fun.return_block.code[:-1] + uninstall + fun.return_block.code[-1:]
         fun.start_block.code = setup + fun.start_block.code
-    
+        
     if fun.name == 'main:\n':
         for block in fun.block:
             if type(block.code[-1]) is Ret:

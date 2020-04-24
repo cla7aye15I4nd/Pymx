@@ -3,6 +3,9 @@ from .register import temporary, register
 
 # Instruction Base Object
 class Instruction:
+    def __init__(self):
+        self.flag = False
+
     def __str__(self):
         return 'unknown'
 
@@ -36,6 +39,7 @@ class Instruction:
 # Instruction Type Object
 class Branch(Instruction):
     def __init__(self, mask, rs1, rs2, offset):
+        super().__init__()
         self.mask = mask
         self.rs1 = rs1
         self.rs2 = rs2
@@ -49,6 +53,7 @@ class Branch(Instruction):
 
 class Load(Instruction):
     def __init__(self, mask, rd, rs, offset):
+        super().__init__()
         self.mask = mask
         self.rd = rd
         self.rs = rs
@@ -59,6 +64,7 @@ class Load(Instruction):
 
 class Store(Instruction):
     def __init__(self, mask, rs2, rs1, offset):
+        super().__init__()
         self.mask = mask
         self.rs2 = rs2
         self.rs1 = rs1
@@ -69,6 +75,7 @@ class Store(Instruction):
 
 class OPi(Instruction):
     def __init__(self, oper, rd, rs, imm):
+        super().__init__()
         self.oper = oper
         self.rd = rd
         self.rs = rs
@@ -79,6 +86,7 @@ class OPi(Instruction):
 
 class OPr(Instruction):
     def __init__(self, oper, rd, rs1, rs2):
+        super().__init__()
         self.oper = oper
         self.rd = rd
         self.rs1 = rs1
@@ -90,6 +98,7 @@ class OPr(Instruction):
 # RV32I Base Integer Instruction Set
 class LUI(Instruction):
     def __init__(self, rd, imm):
+        super().__init__()
         self.rd = rd
         self.imm = imm
 
@@ -98,6 +107,7 @@ class LUI(Instruction):
 
 class AUIPC(Instruction):
     def __init__(self, rd, offset):
+        super().__init__()
         self.rd = rd
         self.offset = offset
 
@@ -106,6 +116,7 @@ class AUIPC(Instruction):
 
 class JAL(Instruction):
     def __init__(self, rd, offset):
+        super().__init__()
         self.rd = rd
         self.offset = offset
 
@@ -114,6 +125,7 @@ class JAL(Instruction):
 
 class JALR(Instruction):
     def __init__(self, rd, rs, offset):
+        super().__init__()
         self.rd = rd
         self.rs = rs
         self.offset = offset
