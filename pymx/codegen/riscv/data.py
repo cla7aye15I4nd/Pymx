@@ -5,10 +5,11 @@ class DataBlock:
 
     def __str__(self):
         if type(self.value) is str:
+            string = self.value.replace('\\', r'\\').replace('\n', r'\n').replace('"', r'\"')
             text = f'{self.name}.size:\n'
             text += f'  .word {len(self.value)}\n'     
             text += f'{self.name}.data:\n'
-            text += f'  .asciz "{self.value}"\n'
+            text += f'  .asciz "{string}"\n'
             text += f'{self.name}:\n'
             text += f'  .word {self.name}.data\n'            
         else:
