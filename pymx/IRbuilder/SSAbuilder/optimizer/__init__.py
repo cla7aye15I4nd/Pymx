@@ -26,7 +26,7 @@ def optimize(cfg, args):
     code = cfg.serial()
     if args.debug:
         try:
-            print_cfg(cfg)
+            print_cfg(cfg, f'cfg_{cfg.name}')
             print_domin(build_tree(cfg))
         except Exception as err:
             print('[ERROR] debug fail at optimizer', err)            

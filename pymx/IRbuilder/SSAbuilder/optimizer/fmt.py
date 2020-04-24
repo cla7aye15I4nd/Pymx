@@ -10,7 +10,8 @@ def optimize(cfg):
             ret_stmt.append((ret.reg, Label(block.label)))
     
     if len(ret_stmt) > 1:        
-        block = Block(max(cfg.order) + 1)
+        cfg.count += 1
+        block = Block(cfg.count)
 
         reg = cfg.get_var(ret_stmt[0][0])
         block.add_inst(Phi(reg, ret_stmt))

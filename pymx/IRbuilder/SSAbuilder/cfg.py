@@ -5,6 +5,7 @@ from pymx.fakecode.inst import Branch, Jump, Phi, Arith, Logic
 
 class CFG:    
     def __init__(self):
+        self.name = None
         self.defs = {}
         self.gvar = {}
         self.block = {}
@@ -264,6 +265,7 @@ def build_CFG(func, args=None):
     cfg.par_cnt = len(func.params)
 
     code = func.code
+    cfg.name = func.name
     block = Block(0)
 
     flag = True
