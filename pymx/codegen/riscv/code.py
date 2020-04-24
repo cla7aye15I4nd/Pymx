@@ -73,10 +73,16 @@ class BasicBlock:
 def build_func(func, args):
     ctx.clear()
     cfg = build_CFG(func)
+
+    if func.name == 'main':
+        func.name = '__main'        
+    elif func.name == '__main':
+        func.name = 'main'    
+    
     fun = FunctionBlock(func.name)
         
     fun.return_adderss = VirtualRegister(cfg.count + 1)
-    ctx.regcount = cfg.count + 2
+    ctx.regcount = cfg.count + 2    
 
     trans = phi.remove(cfg)
     if args.debug:
@@ -110,6 +116,12 @@ def build_func(func, args):
 
     fun.replace()
     fun.simpify()
+
+    if fun.name == 'main:\n':
+        for block in fun.block:
+            if type(block.code[-1]) is Ret:
+                block.code[-1] = TAIL('__main', 0)
+                break
 
     return fun
 
