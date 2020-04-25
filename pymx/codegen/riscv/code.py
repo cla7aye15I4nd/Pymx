@@ -76,10 +76,11 @@ def build_func(func, args):
     ctx.clear()
     cfg = build_CFG(func)
 
-    if func.name == 'main':
-        func.name = '__main'        
-    elif func.name == '__main':
-        func.name = 'main'    
+    if ctx.flip:
+        if func.name == 'main':
+            func.name = '__main'        
+        elif func.name == '__main':
+            func.name = 'main'    
     
     fun = FunctionBlock(func.name)
     
@@ -118,15 +119,16 @@ def build_func(func, args):
     
     fun.replace()
     modify = {ra, x6}
-    preserve = set()
 
-    for block in fun.block:
-        for inst in block.code:
-            modify |= inst.def_set()
-            for reg in inst.preserve():
-                if reg not in ctx.spill_offset:
-                    ctx.spill(reg)
-                    preserve.add(reg)
+    if func.name not in ['main', '__main']:
+        preserve = set()
+        for block in fun.block:
+            for inst in block.code:
+                modify |= inst.def_set()
+                for reg in inst.preserve():
+                    if reg not in ctx.spill_offset:
+                        ctx.spill(reg)
+                        preserve.add(reg)
     
     modify &= temporary
     ctx.modify[func.name] = modify
@@ -144,7 +146,7 @@ def build_func(func, args):
             rb.code = rb.code[:-1] + uninstall + rb.code[-1:]
         fun.start_block.code = setup + fun.start_block.code
         
-    if fun.name == 'main:\n':
+    if ctx.flip and fun.name == 'main:\n':
         for block in fun.block:
             if type(block.code[-1]) is Ret:
                 block.code[-1] = TAIL('__main', 0)

@@ -2,6 +2,7 @@
 
 from .code import build_func
 from .data import build_data
+from .context import ctx
 
 class AsmCode:
     def __init__(self):
@@ -24,6 +25,9 @@ class AsmCode:
 
 def build(ir, args):
     asm_code = AsmCode()
+
+    ctx.flip = any(func.name == '__main' and len(func.code) > 2 for func in ir.func)           
+            
     for func in ir.func:
         asm_code.add_text(build_func(func, args))
     for data in ir.vars:
