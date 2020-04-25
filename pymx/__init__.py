@@ -23,15 +23,14 @@ def main():
 
 def get_arguments():
     parser = argparse.ArgumentParser(
-        description='Pymx is a Mx compiler created in Python', 
-        usage='pymx [-h] [options] files...'
+        description='Pymx is a Mx compiler created in Python',         
     )
 
-    parser.add_argument('files', metavar='files', nargs="+")
-    parser.add_argument('-d', dest='debug', action='store_true')
-    parser.add_argument('-c', dest='syntax_only', action='store_true')    
-    parser.add_argument('-l', dest='ir_file')
-    parser.add_argument('-s', dest='asm_file')
+    parser.add_argument('files', metavar='files', nargs="+", help='Source file')
+    parser.add_argument('-d', dest='debug', action='store_true', help='Developer option')
+    parser.add_argument('-c', dest='syntax_only', action='store_true', help='Syntax check only')    
+    parser.add_argument('-l', dest='ir_file', help='Intermediate code file')
+    parser.add_argument('-s', dest='asm_file', help='Target file')
     return parser.parse_args()
 
 def process_file(args):
@@ -42,7 +41,6 @@ def process_file(args):
     if not error_collector.ok():
         return None
     
-    print_tokens(token_list)
     tree = parse(token_list)
     
     if not error_collector.ok():
