@@ -2,6 +2,7 @@ from .register import VirtualRegister
 
 class Context:
     def __init__(self):
+        self.modify = {}
         self.clear()
 
     def clear(self):

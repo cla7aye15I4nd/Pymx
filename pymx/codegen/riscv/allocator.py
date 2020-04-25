@@ -26,8 +26,11 @@ class Node:
         else:
             self.color = reg.idx
 
+    def adjust(self, graph):
+        return {graph[_].color for _ in self.edge if graph[_].color}
+
     def __hash__(self):
-        return self.name
+        return hash(self.name)
 
 class InstSeq:
     def __init__(self):

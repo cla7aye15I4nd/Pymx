@@ -353,7 +353,7 @@ class SLTZ(SLT):
         super().__init__(rd, rs, zero)
 
     def __str__(self):
-        return f' sltz {self.rd}, {self.rs1}\n'
+        return f'  sltz {self.rd}, {self.rs1}\n'
 
 class SGTZ(SLT):
     def __init__(self, rd, rs):
@@ -459,6 +459,7 @@ class Ret(JALR):
     def preserve(self):
         return set()
 
+from .context import ctx
 class CALL(JALR):
     def __init__(self, offset, count):
         super().__init__(ra, x6, offset)
@@ -468,7 +469,9 @@ class CALL(JALR):
         return f'  call {self.offset}\n'
 
     def def_set(self):   
-        return temporary
+        if self.offset not in ctx.modify:
+            return temporary
+        return ctx.modify[self.offset]
 
     def use_set(self):
         return {register[idx] for idx in range(10, 10 + self.count)}

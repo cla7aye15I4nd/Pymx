@@ -5,7 +5,7 @@ from . import generator, phi
 
 from .context import ctx
 from .simpify import simpify
-from .register import register, ra, sp, VirtualRegister
+from .register import register, ra, x6, sp, VirtualRegister, temporary
 from .allocator import allocate
 from .isa import CALL, TAIL, Ret, MV, ADDI, SW, LW
 
@@ -17,7 +17,7 @@ class FunctionBlock:
         self.setup = []
         self.start_block = BasicBlock(name, 'S')
         self.return_block = []
-        self.return_adderss = None   
+        self.return_adderss = None        
 
         self.add_block(self.start_block)     
 
@@ -117,14 +117,20 @@ def build_func(func, args):
     allocate(fun, args)
     
     fun.replace()
+    modify = {ra, x6}
     preserve = set()
+
     for block in fun.block:
         for inst in block.code:
+            modify |= inst.def_set()
             for reg in inst.preserve():
                 if reg not in ctx.spill_offset:
                     ctx.spill(reg)
                     preserve.add(reg)
     
+    modify &= temporary
+    ctx.modify[func.name] = modify
+
     if ctx.spill_offset:
         offset = max(ctx.spill_offset.values()) + 4
         
