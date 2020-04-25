@@ -150,11 +150,17 @@ def generate_logic(g, obj):
         dv = vr(obj.dst)
         if obj.oper == 'eq':
             temp = ctx.get_vr()
-            res.append(XORI(temp, lv, obj.rhs.name))
+            if type(obj.rhs) is Const:
+                res.append(XORI(temp, lv, obj.rhs.name))
+            else:
+                res.append(XOR(temp, lv, vr(obj.rhs)))
             res.append(SEQZ(dv, temp))
         elif obj.oper == 'ne':
             temp = ctx.get_vr()
-            res.append(XORI(temp, lv, obj.rhs.name))
+            if type(obj.rhs) is Const:
+                res.append(XORI(temp, lv, obj.rhs.name))
+            else:
+                res.append(XOR(temp, lv, vr(obj.rhs)))            
             res.append(SNEZ(dv, temp))
         elif obj.oper == 'slt':
             if type(obj.rhs) is Const:
