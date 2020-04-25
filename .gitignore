@@ -143,7 +143,6 @@ cfg*.png
 domin.dot
 domin.png
 a.out
-sample
 sample.c
 sample.s
 tools/compile.sh
