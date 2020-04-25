@@ -11,9 +11,10 @@ def place_phi_node(cfg, domin):
     for var in cfg.defs.values():
         name = var.dst.name
         values[name] = 0        
-        phi_map[name] = _place_phi_node(var, cfg, domin)    
+        phi_map[name] = _place_phi_node(var, cfg, domin)            
+            
+    rename_pass(cfg, phi_map, domin)    
     
-    rename_pass(cfg, phi_map, domin)
     cfg.defs.clear()
 
 def rename_pass(cfg, phi_map, domin):
@@ -62,9 +63,9 @@ def rename_pass(cfg, phi_map, domin):
                 incoming_vals[dst] = inst.src
                 block.code.remove(inst)
     
-    def _rename_pass(u, pred, incoming_vals):
-        visit_succ = set()
+    def _rename_pass(u, pred, incoming_vals):        
         while True:
+            visit_succ = set()
             handle_phi(u, pred)
             if u in visited:
                 return
@@ -78,10 +79,7 @@ def rename_pass(cfg, phi_map, domin):
                     next_node = v
                 elif v not in visit_succ:
                     visit_succ.add(v)
-                    if v in domin.succ[u]:                    
-                        work_list.append((v, u, deepcopy(incoming_vals)))
-                    else:
-                        work_list.append((v, u, deepcopy(incoming_vals)))
+                    work_list.append((v, u, deepcopy(incoming_vals)))
             
             if next_node is None:
                 return
@@ -134,7 +132,6 @@ def livein_blocks(var, cfg, var_defs):
 def calculate_phi(cfg, domin, var_defs, live_blks):
     phi_block = []
     work_list = list(deepcopy(var_defs))
-
     while work_list:
         u = work_list.pop(0)
         for v in cfg.block[u].df:

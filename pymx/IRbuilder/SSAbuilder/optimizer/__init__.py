@@ -27,7 +27,7 @@ def optimize(cfg, args):
     if args.debug:
         try:
             print_cfg(cfg, f'cfg_{cfg.name}')
-            print_domin(build_tree(cfg))
+            print_domin(domin, f'domin_{cfg.name}')
         except Exception as err:
             print('[ERROR] debug fail at optimizer', err)            
     

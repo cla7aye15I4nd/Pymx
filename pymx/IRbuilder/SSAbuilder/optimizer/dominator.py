@@ -60,6 +60,15 @@ def build_tree(cfg):
         end[u] = clk
         return clk
 
+    def dfs_domin(u, clk):
+        dfn[u] = clk
+        idx[clk] = u        
+        for v in domin[u]:
+            if v not in dfn:
+                clk = dfs_domin(v, clk + 1)
+        end[u] = clk
+        return clk
+
     def find(u):
         if u == fa[u]:
             return u
@@ -78,12 +87,12 @@ def build_tree(cfg):
         for v in domin[u]:
             compute_df(v)
             for w in cfg.block[v].df:
-                if not is_domin(u, w) or u == w:                        
+                if (not is_domin(u, w)) or u == w:                        
                     df.add(w)
         
         cfg.block[u].df = list(df)
 
-    def is_domin(u, v):
+    def is_domin(u, v):        
         return dfn[u] <= dfn[v] <= end[u]
 
     for block in cfg.block.values(): 
@@ -135,8 +144,8 @@ def build_tree(cfg):
             idom[u] = idom[idom[u]]
         domin[idom[u]].append(u)
 
-    dfn.clear()
-    dfs(0, 1)
+    dfn.clear()    
+    dfs_domin(0, 1)    
     compute_df(0)
-
+    
     return DomTree(domin, cfg)
