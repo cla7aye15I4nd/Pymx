@@ -17,14 +17,14 @@ class FunctionBlock:
         self.setup = []
         self.start_block = BasicBlock(name, 'S')
         self.return_block = []
-        self.return_adderss = None        
+        self.ra = None        
 
         self.add_block(self.start_block)     
 
     def add_block(self, block):        
         for idx, inst in enumerate(list(block.code)):
             if type(inst) is Ret:
-                block.code.insert(idx, MV(ra, self.return_adderss))                
+                block.code.insert(idx, MV(ra, self.ra))                
                 self.return_block.append(block)
                 break
         self.blocks[block.label] = block
@@ -74,25 +74,18 @@ class BasicBlock:
 
 def build_func(func, args):
     ctx.clear()
-    cfg = build_CFG(func)
 
-    if ctx.flip:
-        if func.name == 'main':
-            func.name = '__main'        
-        elif func.name == '__main':
-            func.name = 'main'    
-    
+    redirect_main(func)
+    cfg = build_CFG(func)
     fun = FunctionBlock(func.name)
     
     cfg.count += 1
-    fun.return_adderss = VirtualRegister(cfg.count)
-    fun.start_block.code.append(MV(fun.return_adderss, ra))
+    fun.ra = VirtualRegister(cfg.count)
+    fun.start_block.code.append(MV(fun.ra, ra))
     
-    cur = 9
     for i in range(len(func.params)):
-        cur += 1
         ctx.params.append(VirtualRegister(i))
-        fun.start_block.code.append(MV(ctx.params[i], register[cur]))
+        fun.start_block.code.append(MV(ctx.params[i], register[i + 10]))
     
     phi.remove(cfg)
     ctx.regcount = cfg.count + 2
@@ -114,13 +107,22 @@ def build_func(func, args):
             next_block = cfg.order[i + 1]
         
         fun.add_block(build_block(func.name, block, next_block))
+
     fun.replace()
     allocate(fun, args)
     
     fun.replace()
+    save_callee_register(fun, func.name)
+        
+    hook_main(fun)
+    fun.simpify()
+
+    return fun
+
+def save_callee_register(fun, name):
     modify = {ra, x6}
 
-    if func.name not in ['main', '__main']:
+    if name not in ['main', '__main']:
         preserve = set()
         for block in fun.block:
             for inst in block.code:
@@ -130,8 +132,7 @@ def build_func(func, args):
                         ctx.spill(reg)
                         preserve.add(reg)
     
-    modify &= temporary
-    ctx.modify[func.name] = modify
+    ctx.modify[name] = modify & temporary
 
     if ctx.spill_offset:
         offset = max(ctx.spill_offset.values()) + 4
@@ -145,15 +146,20 @@ def build_func(func, args):
         for rb in fun.return_block:
             rb.code = rb.code[:-1] + uninstall + rb.code[-1:]
         fun.start_block.code = setup + fun.start_block.code
-        
+
+def redirect_main(func):
+    if ctx.flip:
+        if func.name == 'main':
+            func.name = '__main'        
+        elif func.name == '__main':
+            func.name = 'main'  
+
+def hook_main(fun):
     if ctx.flip and fun.name == 'main:\n':
         for block in fun.block:
             if type(block.code[-1]) is Ret:
                 block.code[-1] = TAIL('__main', 0)
                 break
-    fun.simpify()
-
-    return fun
 
 def build_block(name, block, next_blk):
     bb = BasicBlock(name, block.label)

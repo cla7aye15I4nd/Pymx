@@ -1,10 +1,9 @@
-import sys
+from copy import deepcopy
+
 from .debug import print_info, print_graph
 from .isa import J, Ret, Branch, MV
-from .shader import color
+from .register import register
 from .context import ctx
-
-sys.setrecursionlimit(1000000)
 
 class InstInfo:
     def __init__(self, inst):
@@ -106,11 +105,12 @@ def allocate(fun, args):
             code.add_edge(i, i + 1)
     live_analysis(code, args)
 
-    graph = code.compute_graph()
-    graph = color(graph)
+    graph = greedy_shader(code.compute_graph())
 
     if args.debug:
         print_graph(graph, fun.name.rstrip().rstrip(':'))
+
+    return graph
 
 def live_analysis(code, args):  
     change = [set() for i in range(len(code.seq))]  
@@ -140,21 +140,39 @@ def live_analysis(code, args):
     #     text += '  [O] ' + ','.join([r.__str__() for r in info.out_set]) + '\n'
     #     print(text)
 
-def live_analysis_worklist(code, args):    
-    worklist = {i for i in range(len(code.seq))}
-    while worklist:
-        i = worklist.pop()
-        inst = code.seq[i]
+def greedy_shader(const_graph):
+    def get_complete(graph):
+        return {register[node.color] for node in graph.values() if node.color}
 
-        out_set = set()
-        for succ in inst.succ:
-            out_set |= code.seq[succ].in_set
-        if len(out_set) != len(inst.out_set):
-            inst.out_set = out_set
-
-        in_set = inst.uses | (inst.out_set - inst.defs)
-        if in_set != inst.in_set:                
-            inst.in_set = in_set  
-            for u in inst.pred:
-                worklist.add(u)
-                
+    def search(node, mvc = []):
+        adjust = node.adjust(graph)
+        for r in mvc + complete + register[3:]:
+            if r.idx not in adjust:
+                node.color = r.idx
+                ctx.regfile[node.name] = r
+                return True
+        return False
+    
+    graph = deepcopy(const_graph)
+    complete = list(get_complete(graph))
+    simpify_set = set()
+    large_node = []
+    K = 29
+    for node in graph.values():
+        if len(node.edge) < K:
+            simpify_set.add(node)
+        elif node.color is None:
+            large_node.append(node)
+    
+    large_node.sort(key = lambda node: len(node.edge))
+    for node in large_node:
+        if node.color is None:
+            if not search(node):
+                return None
+    
+    for node in graph.values():
+        if node.color is None:
+            mv_col = [register[graph[r].color] for r in node.move if graph[r].color]
+            search(node, mvc=mv_col)
+    
+    return graph
