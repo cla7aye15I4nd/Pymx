@@ -7,7 +7,7 @@ from .context import ctx
 from .simpify import simpify
 from .register import register, ra, x6, sp, VirtualRegister, temporary
 from .allocator import allocate
-from .isa import CALL, TAIL, Ret, MV, ADDI, SW, LW
+from .isa import CALL, TAIL, Ret, MV, ADDI, SW, LW, J
 
 class FunctionBlock:
     def __init__(self, name):
@@ -15,8 +15,8 @@ class FunctionBlock:
         self.blocks = {}
         self.block = []
         self.setup = []
-        self.start_block = BasicBlock(name, 'S')
         self.return_block = []
+        self.start_block = BasicBlock(name, 'S')
         self.ra = None        
 
         self.add_block(self.start_block)     
@@ -54,7 +54,15 @@ class BasicBlock:
         self.label = f'.{name}_L{label}'
         self.code = []    
         self.call = False
-        self.ret  = False            
+        self.ret  = False      
+
+        self.succ = set()
+        self.pred = set()
+
+        self.defs = set()
+        self.uses = set()
+        self.livein = set()
+        self.liveout = set()           
 
     def add_inst(self, inst):
         if type(inst) is list:
@@ -108,6 +116,7 @@ def build_func(func, args):
         
         fun.add_block(build_block(func.name, block, next_block))
 
+    build_block_link(fun)
     fun.replace()
     allocate(fun, args)
     
@@ -118,6 +127,26 @@ def build_func(func, args):
     fun.simpify()
 
     return fun
+
+def build_block_link(fun):
+    def addedge(u, v):
+        fun.blocks[u].succ.add(v)
+        fun.blocks[v].pred.add(u)
+
+    last = None
+    for bb in fun.block:
+        if last: 
+            addedge(last, bb.label)
+        last = bb.label
+        for i in bb.code:
+            bb.defs |= i.def_set()
+            for u in i.use_set():
+                if u not in bb.defs:
+                    bb.uses.add(u)
+            if type(i) is J:
+                addedge(bb.label, i.offset)
+            if i.is_branch():
+                addedge(bb.label, i.offset)
 
 def save_callee_register(fun, name):
     modify = {ra, x6}
