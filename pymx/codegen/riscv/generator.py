@@ -3,7 +3,7 @@ from pymx.fakecode.inst import Branch, Move, Load, Store
 
 from .context import ctx
 from .register import VirtualRegister as vr
-from .register import zero, a0, register
+from .register import zero, a0, register, sp
 from .isa import (
     LI, LUI,
     LB, LW, SB, SW,
@@ -225,18 +225,35 @@ def generate_call(g, obj):
 
     cur = 9
     for par in obj.params:
-        cur += 1
-        r = register[cur]
-        rv = ctx.get_vr()        
-        if type(par) is Const:
-            res.append(LI(r, par.name))
-        elif par.name[0] == '@':
-            rv = ctx.get_vr()
-            name = par.name[1:]
-            res.append(LUI(rv, f'%hi({name})'))
-            res.append(LW(r, rv, f'%lo({name})'))
+        cur += 1        
+        
+        if cur > 17:
+            offset = (cur - 18) * 4
+            ctx.current_offset = max(ctx.current_offset, offset + 4)
+            if type(par) is Const:
+                rv = ctx.get_vr()
+                res.append(LI(rv, par.name))
+                res.append(SW(rv, sp, offset))
+            elif par.name[0] == '@':
+                rv = ctx.get_vr()
+                name = par.name[1:]
+                res.append(LUI(rv, f'%hi({name})'))
+                res.append(LW(rv, rv, f'%lo({name})'))
+                res.append(SW(rv, sp, offset))
+            else:
+                res.append(SW(vr(par), sp, offset))                
         else:
-            res.append(MV(r, vr(par)))        
+            r = register[cur]
+            rv = ctx.get_vr()
+            if type(par) is Const:
+                res.append(LI(r, par.name))
+            elif par.name[0] == '@':
+                rv = ctx.get_vr()
+                name = par.name[1:]
+                res.append(LUI(rv, f'%hi({name})'))
+                res.append(LW(r, rv, f'%lo({name})'))
+            else:
+                res.append(MV(r, vr(par)))        
 
     res.append(CALL(obj.name, len(obj.params)))
 

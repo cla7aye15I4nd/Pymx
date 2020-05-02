@@ -474,7 +474,7 @@ class CALL(JALR):
         return ctx.modify[self.offset]
 
     def use_set(self):
-        return {register[idx] for idx in range(10, 10 + self.count)}
+        return {register[idx] for idx in range(10, 10 + min(self.count, 8))}
     
     def preserve(self):
         return set()

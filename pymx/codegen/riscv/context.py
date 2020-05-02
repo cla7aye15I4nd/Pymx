@@ -12,6 +12,9 @@ class Context:
         self.users = {}        
         self.params = []
         self.regfile = {}
+        self.loads = []
+        self.stores = []
+        self.stack = {}
         self.regcount = 0        
         self.current_offset = 0
         self.spill_offset = {}

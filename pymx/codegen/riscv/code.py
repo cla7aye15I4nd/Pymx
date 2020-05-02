@@ -93,7 +93,15 @@ def build_func(func, args):
     
     for i in range(len(func.params)):
         ctx.params.append(VirtualRegister(i))
-        fun.start_block.code.append(MV(ctx.params[i], register[i + 10]))
+        if i < 8:
+            fun.start_block.code.append(MV(ctx.params[i], register[i + 10]))
+        elif i < 18:
+            load = LW(ctx.params[i], sp, (i - 8) * 4)
+            ctx.loads.append(load)
+            fun.start_block.code.append(load)
+        else:
+            ctx.stack[ctx.params[i]] = (i - 8) * 4            
+            
     
     phi.remove(cfg)
     ctx.regcount = cfg.count + 2
@@ -122,6 +130,10 @@ def build_func(func, args):
     
     fun.replace()
     save_callee_register(fun, func.name)
+    for load in ctx.loads:        
+        load.offset = ctx.current_offset + load.offset
+    for store in ctx.stores:
+        store.offset = ctx.current_offset + store.offset
         
     hook_main(fun)
     fun.simpify()
@@ -163,7 +175,7 @@ def save_callee_register(fun, name):
     
     ctx.modify[name] = modify & temporary
 
-    if ctx.spill_offset:
+    if ctx.current_offset:
         offset = ctx.current_offset
         
         setup = [ADDI(sp, sp, -offset)]
