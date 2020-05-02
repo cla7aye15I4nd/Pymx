@@ -9,6 +9,7 @@ Pymx is a compiler written in Python 3 for the M* language, M* is a toy language
 ### Usage
 
 ```
+$ pymx -h
 usage: run.py [-h] [-d] [-c] [-l IR_FILE] [-s ASM_FILE] files [files ...]
 
 Pymx is a Mx compiler created in Python
@@ -38,7 +39,7 @@ The Parser will parse the token list to AST and do the semantic check, [`tree`](
 
 #### IR generation
 
-Pymx traverses the syntax tree to generate linear intermediate code called TypeLess LL. The commands' format looks like LLVM IR but just keep partial instructions and without type system. TypeLess LL only care the size of each data. It is defined in [`inst.py`](pymx/inst.py).  Most optimizations are carried out at this stage.
+Pymx traverses the syntax tree to generate linear intermediate code called TypeLess LL. The commands' format looks like LLVM IR but just keep partial instructions and without type system. TypeLess LL only care the size of each data. It is defined in [`inst.py`](pymx/fakecode/inst.py).  Most optimizations are carried out at this stage.
 
 #### ASM generation
 
