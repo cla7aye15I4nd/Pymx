@@ -39,6 +39,8 @@ def build_graph(fun):
         graph[v].edge.add(u)
     
     def add_move_edge(u, v):
+        if u == v:
+            return
         if u not in graph:
             graph[u] = Node(u)
         if v not in graph:
@@ -53,11 +55,20 @@ def build_graph(fun):
             if type(i) is MV:
                 live -= i.use_set()
                 add_move_edge(i.rd, i.rs)
-            live |= i.def_set()
-            for u in i.def_set():
-                for v in live:
-                    addedge(u, v)
-            live = i.use_set() | (live - i.def_set())
+            idef = i.def_set()
+            live |= idef
+            for u in idef:
+                if u not in graph:
+                    graph[u] = Node(u)
+                graph[u].edge |= live
+            
+            for u in live:
+                if u not in graph:
+                    graph[u] = Node(u)
+                graph[u].edge |= idef
+
+            live -= i.def_set()
+            live |= i.use_set()            
     return graph
 
 def live_analysis(fun):  
