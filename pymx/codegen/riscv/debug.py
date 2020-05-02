@@ -18,10 +18,10 @@ def print_graph(graph, filename):
                 f.write(f'{u}[color="#{color}", style=filled]\n')
         for u in graph:
             for v in graph[u].edge:
-                if u > v:
+                if u.abi > v.abi:
                     f.write(f'{u}--{v}\n')
             for v in graph[u].move:
-                if u > v:
+                if u.abi > v.abi:
                     f.write(f'{u}--{v}[style=dashed]\n')
         f.write('}\n')
     os.system(f'dot -Tpng {filename}_register.dot -o {filename}_regster.png')

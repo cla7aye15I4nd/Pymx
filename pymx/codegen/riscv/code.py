@@ -150,9 +150,9 @@ def build_block_link(fun):
 
 def save_callee_register(fun, name):
     modify = {ra, x6}
+    preserve = set()
 
-    if name not in ['main', '__main']:
-        preserve = set()
+    if name not in ['main', '__main']:        
         for block in fun.block:
             for inst in block.code:
                 modify |= inst.def_set()
@@ -164,7 +164,7 @@ def save_callee_register(fun, name):
     ctx.modify[name] = modify & temporary
 
     if ctx.spill_offset:
-        offset = max(ctx.spill_offset.values()) + 4
+        offset = ctx.current_offset
         
         setup = [ADDI(sp, sp, -offset)]
         uninstall = [ADDI(sp, sp, +offset)]

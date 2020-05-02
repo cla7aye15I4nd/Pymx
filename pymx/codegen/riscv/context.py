@@ -13,8 +13,13 @@ class Context:
         self.params = []
         self.regfile = {}
         self.regcount = 0        
+        self.current_offset = 0
         self.spill_offset = {}
         self.next_block = -1
+
+    def get_offset(self):
+        self.current_offset += 4
+        return self.current_offset - 4
 
     def add_vr(self, inst):
         if inst.dest():
@@ -35,10 +40,7 @@ class Context:
         if reg in self.spill_offset:
             return self.spill_offset[reg]
         
-        offset = 0
-        if self.spill_offset:
-            offset = max(self.spill_offset.values()) + 4
-        
+        offset = self.get_offset()
         self.spill_offset[reg] = offset
         return offset
 

@@ -14,7 +14,7 @@ class Instruction:
 
     def use_set(self):
         return {getattr(self, n) for n in ['rs', 'rs1', 'rs2'] if hasattr(self, n)}
-
+    
     def preserve(self):
         return {getattr(self, 'rd')} if hasattr(self, 'rd') and getattr(self, 'rd').preserved else set()
 
