@@ -21,7 +21,20 @@ from .isa import (
 
 def generate(g, obj):
     name = 'generate_{}'.format(obj.__class__.__name__.lower())
-    return getattr(g, name)(g, obj)
+    result = getattr(g, name)(g, obj)
+
+    if result:
+        if type(result) is not list:
+            result = [result]
+        
+        res = []
+        for inst in result:
+            for r in inst.def_set():
+                if 18 <= r.idx < len(ctx.params):
+                    res.append(LW(r, sp, ctx.stack[ctx.params[r.idx]]))
+            res.append(inst)
+        return res
+    
 
 def generate_store(g, obj):
     res = []
