@@ -65,6 +65,11 @@ def check_binary(chk, binary:Binary):
         binary.type = BoolType()
     elif lhs == StringType() and oper == '+':
         binary.type = StringType()            
+        if type(binary.left) is Constant and type(binary.right) is Constant:
+            const = binary.left            
+            const.expr.content += binary.right.expr.content
+            const.expr.text = const.expr.text[:-1] + binary.right.expr.text[1:]            
+            return const
     elif oper in diff:
         binary.type = BoolType()        
     else:
