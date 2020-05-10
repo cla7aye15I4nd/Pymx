@@ -9,6 +9,7 @@ def _optimize(cfg):
     imp = [Store, Ret, Call, Malloc]
     
     graph = build_depend_graph(cfg)
+
     work_list = []
 
     for block in cfg.block.values():
@@ -49,9 +50,10 @@ def _optimize(cfg):
     return flag
 
 def build_depend_graph(cfg):
+    cfg.compute_graph()
     graph = {}
     for block in cfg.block.values():
-        graph[block.label] = []
+        graph[block.label] = block.preds
         for inst in block.code:
             dest = inst.dest()
             if dest:
