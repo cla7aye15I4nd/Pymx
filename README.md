@@ -43,7 +43,7 @@ Pymx traverses the syntax tree to generate linear intermediate code called TypeL
 
 #### ASM generation
 
-Pymx generate the RISCV target code from TypeLess LL code, [live analysis](pymx/codegen/riscv/allocator.py) and [register allocation](pymx/codegen/riscv/shader.py) will be performed at this stage, and will do some simple peephole optimization. 
+Pymx generate the RISCV target code from TypeLess LL code, [live analysis](pymx/codegen/riscv/allocator.py) and [register allocation](pymx/codegen/riscv/allocator.py) will be performed at this stage, and will do some simple peephole optimization. 
 
 ### Optimize
 
@@ -59,5 +59,6 @@ Pymx generate the RISCV target code from TypeLess LL code, [live analysis](pymx/
 - RV32 ABI - https://github.com/riscv/riscv-elf-psabi-doc/blob/master/riscv-elf.md
 - LLVM mem2reg - https://llvm.org/doxygen/PromoteMemoryToRegister_8cpp_source.html
 - LLVM Language - https://llvm.org/docs/LangRef.html
+- Visitor mode - https://abcdabcd987.com/notes-on-antlr4/
 - Compilers: Principles, Techniques, and Tools (dragon book)
 
