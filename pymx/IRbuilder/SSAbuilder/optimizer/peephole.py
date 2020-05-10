@@ -59,52 +59,7 @@ def eliminate_useless_jump(cfg):
     flag = False
     for block in cfg.block.values():
         src = block.label
-        inst = block.code[-1]        
-        if type(inst) is Branch:
-            tar_t = cfg.block[inst.true.label].head_jump
-            tar_f = cfg.block[inst.false.label].head_jump
-            
-            if tar_t:
-                if tar_t in block.edges:                    
-                    for cmd in cfg.block[tar_t].code:
-                        if (type(cmd) is Phi and 
-                                any(unit[1] == inst.true for unit in cmd.units)):
-                            break
-                    else:
-                        flag = True
-                        block.code[-1] = Jump(Label(tar_t))
-                        block.edges = [tar_t]
-                        block.tail_jump = tar_t                        
-                        if len(block.code) == 1:
-                            block.head_jump = tar_t                            
-                        return flag
-                else:
-                    flag = True                
-                    replace_phi_label(inst.true.label, src, tar_t)
-                    inst.true.label = tar_t
-                    block.edges.append(tar_t)
-                    return flag
-            if tar_f:
-                if tar_f in block.edges:
-                    for cmd in cfg.block[tar_f].code:
-                        if (type(cmd) is Phi and 
-                                any(unit[1] == inst.false for unit in cmd.units)):
-                            break
-                    else:
-                        flag = True
-                        block.code[-1] = Jump(Label(tar_f))
-                        block.edges = [tar_f]
-                        block.tail_jump = tar_f
-                        if len(block.code) == 1:
-                            block.head_jump = tar_f
-                        return flag
-                else:
-                    flag = True                
-                    replace_phi_label(inst.false.label, src, tar_f)
-                    inst.false.label = tar_f
-                    block.edges.append(tar_f)
-                    return flag
-        
+        inst = block.code[-1]                
         if type(inst) is Jump:
             tar = cfg.block[inst.label.label].head_jump
             
@@ -178,7 +133,7 @@ def promote_single_store_alloc(cfg, alloc, bk):
     rp = {}
     val = None
     def replace_hook(reg):
-        return deepcopy(rp[reg.name]) if reg.name in rp else reg
+        return deepcopy(rp[reg.name]) if reg and reg.name in rp else reg
     
     code = cfg.block[bk].code
     for inst in code:

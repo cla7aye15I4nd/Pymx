@@ -288,3 +288,10 @@ def build_CFG(func, args=None):
     
     cfg.add_block(block)
     return cfg
+
+def jump_block(label, source, target):
+    block = Block(label)
+    block.code.append(Jump(Label(target)))
+    block.edges.append(source)
+    block.edges.append(target)
+    return block

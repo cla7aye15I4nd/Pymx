@@ -1,10 +1,12 @@
 from copy import deepcopy
 from pymx.fakecode import Const, Label
 from pymx.fakecode.inst import Load, Store, Phi, Call, Malloc
+from ..cfg import jump_block
 from .heap import Heap
 
 def place_phi_node(cfg, domin):
     cfg.compute_graph()
+    cfg.compute_alloc_ref()
 
     values = {}
     phi_map = {}
@@ -133,7 +135,7 @@ def calculate_phi(cfg, domin, var_defs, live_blks):
     phi_block = []
     work_list = list(deepcopy(var_defs))
     while work_list:
-        u = work_list.pop(0)
+        u = work_list.pop(0)        
         for v in cfg.block[u].df:
             if v not in phi_block:
                 phi_block.append(v)
@@ -192,3 +194,35 @@ def live_in_block(var, block):
         if type(inst) is Store and inst.dst == var.dst:
             return False
     return False
+
+def split_edge(cfg):
+    cfg.compute_graph()
+    for block in list(cfg.block.values()):
+        if len(block.edges) <= 1:
+            continue
+        for succ in list(block.edges):
+            if len(cfg.block[succ].preds) > 1:                
+                cfg.count += 1
+                label = cfg.count                
+                middle_block = jump_block(label, block.label, succ)
+
+                block.edges.remove(succ)
+                block.edges.append(label)
+
+                cfg.block[succ].preds.append(label)
+                cfg.block[succ].preds.remove(block.label)      
+
+                br = block.code[-1]
+
+                if br.true.label == succ:
+                    br.true.label = label
+                if br.false.label == succ:
+                    br.false.label = label
+                for phi in cfg.block[succ].code:
+                    if type(phi) is not Phi:
+                        break
+                    for unit in phi.units:
+                        if unit[1].label == block.label:
+                            unit[1].label = label
+
+                cfg.add_block(middle_block)                
