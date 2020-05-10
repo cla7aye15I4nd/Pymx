@@ -240,6 +240,7 @@ class Phi(Base):
     def depend(self):
         dep = []
         for unit in self.units:
+            dep.append(unit[1].label)
             if type(unit[0]) is Reg:
                 dep.append(unit[0].name)
         return dep
