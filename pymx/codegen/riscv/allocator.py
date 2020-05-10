@@ -131,13 +131,16 @@ def greedy_shader(graph):
     
     for node in graph.values():
         if node.color is None:
-            mv_col = [register[graph[r].color] for r in node.move if graph[r].color]
+            mv_col = []
+            for r in node.move:
+                col = graph[r].color
+                if col and col < 32:
+                    mv_col.append(register[col])
             search(node, mvc=mv_col)
 
     return spill_node
 
 def rewrite_program(fun, spill_node):
-    fun.replace()
     for bb in fun.block:
         rewrite_block(bb, spill_node)
 
@@ -148,24 +151,25 @@ def rewrite_block(block, spill_node):
         store_reg = inst.def_set() & spill_node
 
         if type(inst) is MV:
-            if load_reg and store_reg:
+            if load_reg and store_reg:     
+                new = ctx.get_vr()                           
                 for reg in load_reg:
-                    code.append(LW(inst.rs, sp, ctx.spill_offset[reg]))
+                    code.append(LW(new, sp, ctx.spill_offset[reg]))
                 for reg in store_reg:
-                    code.append(SW(inst.rs, sp, ctx.spill_offset[reg]))
-            elif load_reg:
+                    code.append(SW(new, sp, ctx.spill_offset[reg]))
+            elif load_reg:                
                 for reg in load_reg:
                     code.append(LW(inst.rd, sp, ctx.spill_offset[reg]))
-            elif store_reg:
+            elif store_reg:                
                 for reg in store_reg:
-                    code.append(SW(inst.rs, sp, ctx.spill_offset[reg]))
+                    code.append(SW(inst.rs, sp, ctx.spill_offset[reg]))                
             else:
                 code.append(inst)
         else:
             for reg in load_reg:
-                code.append(LW(reg, sp, ctx.spill_offset[reg]))
+                code.append(LW(reg, sp, ctx.spill_offset[reg]))                
             code.append(inst)
             for reg in store_reg:
-                code.append(SW(reg, sp, ctx.spill_offset[reg]))
+                code.append(SW(reg, sp, ctx.spill_offset[reg]))                
 
     block.code = code

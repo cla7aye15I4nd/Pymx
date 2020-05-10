@@ -14,6 +14,8 @@ class DataBlock:
             text += f'  .word {self.name}.data\n'            
         else:
             text = f'{self.name}:\n'
+            if self.value is None:
+                self.value = 0
             text += f'  .word {self.value}\n'
         return text
 

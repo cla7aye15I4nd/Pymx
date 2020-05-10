@@ -57,10 +57,10 @@ def generate_load(g, obj):
     res = []
     dst = generate_register(obj.dst, res)    
     if obj.src.name[0] == '@':        
-        src = ctx.get_vr()
+        src = dst
         name = obj.src.name[1:]
         offset = f'%lo({name})'        
-        res.append(LUI(src, f'%hi({name})'))
+        res.append(LUI(dst, f'%hi({name})'))        
     else:
         offset = 0
         src = generate_register(obj.src, res)

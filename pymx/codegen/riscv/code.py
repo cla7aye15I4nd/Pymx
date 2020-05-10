@@ -33,10 +33,7 @@ class FunctionBlock:
     def simpify(self):
         for bb in list(self.block):
             if bb.code:
-                simpify(bb)
-            else:
-                self.block.remove(bb)
-                self.blocks.pop(bb.label)
+                simpify(bb)            
 
     def replace(self):
         for block in self.block:            
