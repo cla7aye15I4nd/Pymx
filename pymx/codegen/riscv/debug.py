@@ -17,8 +17,8 @@ def print_graph(graph, filename):
                 color = hex(0xffff00 - 0x012033 * graph[u].color)[2:].rjust(6, '0')
                 f.write(f'{u}[color="#{color}", style=filled]\n')
         for u in graph:
-            for v in graph[u].edge:
-                if u.abi > v.abi:
+            for v in graph[u].edge:                
+                if u.abi > v.abi and graph[u].register.virtual:                    
                     f.write(f'{u}--{v}\n')
             for v in graph[u].move:
                 if u.abi > v.abi:
