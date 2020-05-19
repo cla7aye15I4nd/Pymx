@@ -1,6 +1,6 @@
 """ optimize cfg """
 
-from . import peephole, gvn, dce, fmt, glo, sr, mem2reg
+from . import peephole, gvn, mem, dce, fmt, glo, sr, mem2reg
 from .dominator import build_tree
 from .constant_fold import constant_fold
 
@@ -16,12 +16,14 @@ def optimize(cfg, args):
     mem2reg.place_phi_node(cfg, domin)
     peephole.optimize(cfg)
 
-    gvn.optimize(cfg)
-    constant_fold(cfg)
-    peephole.optimize(cfg)
-    
+    for _ in range(5):
+        gvn.optimize(cfg)     
+        if args.optim:
+            mem.optimize(cfg)
+        constant_fold(cfg)
     sr.optimize(cfg)
     dce.optimize(cfg)    
+    peephole.optimize(cfg)    
 
     cfg._serial()
     

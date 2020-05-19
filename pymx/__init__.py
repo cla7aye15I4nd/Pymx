@@ -28,6 +28,7 @@ def get_arguments():
 
     parser.add_argument('files', metavar='files', nargs="+", help='Source file')
     parser.add_argument('-d', dest='debug', action='store_true', help='Developer option')
+    parser.add_argument('-t', dest='optim', action='store_true', help='Optimize option')
     parser.add_argument('-c', dest='syntax_only', action='store_true', help='Syntax check only')    
     parser.add_argument('-l', dest='ir_file', help='Intermediate code file')
     parser.add_argument('-s', dest='asm_file', help='Target file')
