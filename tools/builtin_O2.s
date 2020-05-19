@@ -43,63 +43,30 @@ println:
 	addi	sp,sp,16
 	tail	putc
 	.size	println, .-println
+	.section	.rodata.str1.4,"aMS",@progbits,1
+	.align	2
+.LC0:
+	.string	"%d"
+	.text
 	.align	2
 	.globl	printInt
 	.type	printInt, @function
 printInt:
-	addi	sp,sp,-96
-	sw	s1,84(sp)
-	sw	ra,92(sp)
-	sw	s0,88(sp)
-	sw	s2,80(sp)
-	sw	s3,76(sp)
-	mv	s1,a0
-	blt	a0,zero,.L16
-.L10:
-	mv	s2,sp
-	mv	s0,s2
-	li	a5,10
-.L11:
-	rem	a0,s1,a5
-	addi	s0,s0,1
-	div	s1,s1,a5
-	andi	a0,a0,0xff
-	sb	a0,-1(s0)
-	bne	s1,zero,.L11
-	beq	s0,s2,.L9
-	lui	s3,%hi(stdout)
-	j	.L13
-.L17:
-	lbu	a0,-1(s0)
-.L13:
-	lw	a1,%lo(stdout)(s3)
-	addi	s0,s0,-1
-	addi	a0,a0,48
-	call	putc
-	bne	s0,s2,.L17
-.L9:
-	lw	ra,92(sp)
-	lw	s0,88(sp)
-	lw	s1,84(sp)
-	lw	s2,80(sp)
-	lw	s3,76(sp)
-	addi	sp,sp,96
-	jr	ra
-.L16:
-	lui	s3,%hi(stdout)
-	lw	a1,%lo(stdout)(s3)
-	li	a0,45
-	neg	s1,s1
-	call	putc
-	j	.L10
+	mv	a1,a0
+	lui	a0,%hi(.LC0)
+	addi	a0,a0,%lo(.LC0)
+	tail	printf
 	.size	printInt, .-printInt
 	.align	2
 	.globl	printlnInt
 	.type	printlnInt, @function
 printlnInt:
+	mv	a1,a0
+	lui	a0,%hi(.LC0)
 	addi	sp,sp,-16
+	addi	a0,a0,%lo(.LC0)
 	sw	ra,12(sp)
-	call	printInt
+	call	printf
 	lui	a5,%hi(stdout)
 	lw	ra,12(sp)
 	lw	a1,%lo(stdout)(a5)
@@ -107,11 +74,6 @@ printlnInt:
 	addi	sp,sp,16
 	tail	putc
 	.size	printlnInt, .-printlnInt
-	.section	.rodata.str1.4,"aMS",@progbits,1
-	.align	2
-.LC0:
-	.string	"%d"
-	.text
 	.align	2
 	.globl	getInt
 	.type	getInt, @function
@@ -172,20 +134,20 @@ toString:
 	sw	s1,84(sp)
 	sw	s2,80(sp)
 	li	s3,0
-	bge	a0,zero,.L25
+	bge	a0,zero,.L17
 	neg	a0,a0
 	li	s3,1
-.L25:
+.L17:
 	mv	s2,sp
 	mv	s1,s2
 	li	a4,10
-.L26:
+.L18:
 	rem	s0,a0,a4
 	addi	s1,s1,1
 	div	a0,a0,a4
 	andi	s0,s0,0xff
 	sb	s0,-1(s1)
-	bne	a0,zero,.L26
+	bne	a0,zero,.L18
 	li	a0,64
 	call	malloc
 	sub	a4,s1,s2
@@ -193,23 +155,23 @@ toString:
 	sw	a4,0(a0)
 	mv	a5,a0
 	addi	a0,a0,4
-	beq	s3,zero,.L27
+	beq	s3,zero,.L19
 	li	a4,45
 	sb	a4,4(a5)
-.L27:
-	beq	s1,s2,.L24
+.L19:
+	beq	s1,s2,.L16
 	addi	s3,s3,4
 	add	a5,a5,s3
-	j	.L29
-.L37:
-	lbu	s0,-1(s1)
+	j	.L21
 .L29:
+	lbu	s0,-1(s1)
+.L21:
 	addi	s0,s0,48
 	sb	s0,0(a5)
 	addi	s1,s1,-1
 	addi	a5,a5,1
-	bne	s1,s2,.L37
-.L24:
+	bne	s1,s2,.L29
+.L16:
 	lw	ra,92(sp)
 	lw	s0,88(sp)
 	lw	s1,84(sp)
@@ -236,17 +198,17 @@ _string_substring:
 	call	malloc
 	sw	s3,0(a0)
 	addi	a0,a0,4
-	ble	s2,s0,.L38
+	ble	s2,s0,.L30
 	add	a1,s1,s0
 	mv	a5,a0
 	add	a2,s1,s2
-.L40:
+.L32:
 	lbu	a4,0(a1)
 	addi	a1,a1,1
 	addi	a5,a5,1
 	sb	a4,-1(a5)
-	bne	a1,a2,.L40
-.L38:
+	bne	a1,a2,.L32
+.L30:
 	lw	ra,28(sp)
 	lw	s0,24(sp)
 	lw	s1,20(sp)
@@ -265,9 +227,9 @@ _string_parseInt:
 	addi	a5,a2,-48
 	andi	a5,a5,0xff
 	li	a0,0
-	bgtu	a5,a4,.L46
+	bgtu	a5,a4,.L38
 	li	a1,9
-.L45:
+.L37:
 	slli	a5,a0,2
 	add	a5,a5,a0
 	addi	a3,a3,1
@@ -277,9 +239,9 @@ _string_parseInt:
 	addi	a0,a5,-48
 	addi	a4,a2,-48
 	andi	a4,a4,0xff
-	bleu	a4,a1,.L45
+	bleu	a4,a1,.L37
 	ret
-.L46:
+.L38:
 	ret
 	.size	_string_parseInt, .-_string_parseInt
 	.align	2

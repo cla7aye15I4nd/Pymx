@@ -55,58 +55,28 @@ println:
 	addi	sp,sp,32
 	jr	ra
 	.size	println, .-println
+	.section	.rodata
+	.align	2
+.LC0:
+	.string	"%d"
+	.text
 	.align	2
 	.globl	printInt
 	.type	printInt, @function
 printInt:
-	addi	sp,sp,-112
-	sw	ra,108(sp)
-	sw	s0,104(sp)
-	addi	s0,sp,112
-	sw	a0,-100(s0)
-	addi	a5,s0,-84
-	sw	a5,-20(s0)
-	lw	a5,-100(s0)
-	bge	a5,zero,.L7
-	li	a0,45
-	call	putchar
-	lw	a5,-100(s0)
-	neg	a5,a5
-	sw	a5,-100(s0)
-.L7:
-	lw	a4,-100(s0)
-	li	a5,10
-	rem	a3,a4,a5
-	lw	a5,-20(s0)
-	addi	a4,a5,1
-	sw	a4,-20(s0)
-	andi	a4,a3,0xff
-	sb	a4,0(a5)
-	lw	a4,-100(s0)
-	li	a5,10
-	div	a5,a4,a5
-	sw	a5,-100(s0)
-	lw	a5,-100(s0)
-	bne	a5,zero,.L7
-	j	.L8
-.L9:
-	lw	a5,-20(s0)
-	addi	a5,a5,-1
-	sw	a5,-20(s0)
-	lw	a5,-20(s0)
-	lbu	a5,0(a5)
-	addi	a5,a5,48
-	mv	a0,a5
-	call	putchar
-.L8:
-	addi	a5,s0,-84
-	lw	a4,-20(s0)
-	bne	a4,a5,.L9
+	addi	sp,sp,-32
+	sw	ra,28(sp)
+	sw	s0,24(sp)
+	addi	s0,sp,32
+	sw	a0,-20(s0)
+	lw	a1,-20(s0)
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
+	call	printf
 	nop
-	nop
-	lw	ra,108(sp)
-	lw	s0,104(sp)
-	addi	sp,sp,112
+	lw	ra,28(sp)
+	lw	s0,24(sp)
+	addi	sp,sp,32
 	jr	ra
 	.size	printInt, .-printInt
 	.align	2
@@ -128,28 +98,28 @@ printlnInt:
 	addi	sp,sp,32
 	jr	ra
 	.size	printlnInt, .-printlnInt
-	.section	.rodata
-	.align	2
-.LC0:
-	.string	"%d"
-	.text
 	.align	2
 	.globl	getInt
 	.type	getInt, @function
 getInt:
 	addi	sp,sp,-32
-	lui	a0,%hi(.LC0)
-	addi	a1,sp,12
-	addi	a0,a0,%lo(.LC0)
 	sw	ra,28(sp)
-	sw	zero,12(sp)
+	sw	s0,24(sp)
+	addi	s0,sp,32
+	sw	zero,-20(s0)
+	addi	a5,s0,-20
+	mv	a1,a5
+	lui	a5,%hi(.LC0)
+	addi	a0,a5,%lo(.LC0)
 	call	__isoc99_scanf
+	lw	a5,-20(s0)
+	mv	a0,a5
 	lw	ra,28(sp)
-	lw	a0,12(sp)
+	lw	s0,24(sp)
 	addi	sp,sp,32
 	jr	ra
 	.size	getInt, .-getInt
-	.section	.rodata.str1.4
+	.section	.rodata
 	.align	2
 .LC1:
 	.string	"%s"
@@ -208,13 +178,13 @@ toString:
 	sw	a5,-20(s0)
 	sw	zero,-24(s0)
 	lw	a5,-100(s0)
-	bge	a5,zero,.L17
+	bge	a5,zero,.L13
 	li	a5,1
 	sw	a5,-24(s0)
 	lw	a5,-100(s0)
 	neg	a5,a5
 	sw	a5,-100(s0)
-.L17:
+.L13:
 	lw	a4,-100(s0)
 	li	a5,10
 	rem	a3,a4,a5
@@ -228,7 +198,7 @@ toString:
 	div	a5,a4,a5
 	sw	a5,-100(s0)
 	lw	a5,-100(s0)
-	bne	a5,zero,.L17
+	bne	a5,zero,.L13
 	li	a0,64
 	call	malloc
 	mv	a5,a0
@@ -244,14 +214,14 @@ toString:
 	addi	a5,a5,4
 	sw	a5,-32(s0)
 	lw	a5,-24(s0)
-	beq	a5,zero,.L18
+	beq	a5,zero,.L14
 	lw	a5,-32(s0)
 	li	a4,45
 	sb	a4,0(a5)
-.L18:
+.L14:
 	sw	zero,-28(s0)
-	j	.L19
-.L20:
+	j	.L15
+.L16:
 	lw	a5,-20(s0)
 	addi	a5,a5,-1
 	sw	a5,-20(s0)
@@ -269,10 +239,10 @@ toString:
 	lw	a5,-28(s0)
 	addi	a5,a5,1
 	sw	a5,-28(s0)
-.L19:
+.L15:
 	addi	a5,s0,-96
 	lw	a4,-20(s0)
-	bne	a4,a5,.L20
+	bne	a4,a5,.L16
 	lw	a5,-32(s0)
 	mv	a0,a5
 	lw	ra,108(sp)
@@ -309,8 +279,8 @@ _string_substring:
 	sw	a5,-24(s0)
 	lw	a5,-40(s0)
 	sw	a5,-20(s0)
-	j	.L23
-.L24:
+	j	.L19
+.L20:
 	lw	a5,-20(s0)
 	lw	a4,-36(s0)
 	add	a4,a4,a5
@@ -325,10 +295,10 @@ _string_substring:
 	lw	a5,-20(s0)
 	addi	a5,a5,1
 	sw	a5,-20(s0)
-.L23:
+.L19:
 	lw	a4,-20(s0)
 	lw	a5,-44(s0)
-	blt	a4,a5,.L24
+	blt	a4,a5,.L20
 	lw	a5,-24(s0)
 	mv	a0,a5
 	lw	ra,44(sp)
@@ -345,8 +315,8 @@ _string_parseInt:
 	addi	s0,sp,48
 	sw	a0,-36(s0)
 	sw	zero,-20(s0)
-	j	.L27
-.L29:
+	j	.L23
+.L25:
 	lw	a4,-20(s0)
 	mv	a5,a4
 	slli	a5,a5,2
@@ -360,16 +330,16 @@ _string_parseInt:
 	add	a5,a3,a5
 	addi	a5,a5,-48
 	sw	a5,-20(s0)
-.L27:
+.L23:
 	lw	a5,-36(s0)
 	lbu	a4,0(a5)
 	li	a5,47
-	bleu	a4,a5,.L28
+	bleu	a4,a5,.L24
 	lw	a5,-36(s0)
 	lbu	a4,0(a5)
 	li	a5,57
-	bleu	a4,a5,.L29
-.L28:
+	bleu	a4,a5,.L25
+.L24:
 	lw	a5,-20(s0)
 	mv	a0,a5
 	lw	s0,44(sp)
@@ -380,19 +350,9 @@ _string_parseInt:
 	.globl	_string_ord
 	.type	_string_ord, @function
 _string_ord:
-	addi	sp,sp,-32
-	sw	s0,28(sp)
-	addi	s0,sp,32
-	sw	a0,-20(s0)
-	sw	a1,-24(s0)
-	lw	a5,-24(s0)
-	lw	a4,-20(s0)
-	add	a5,a4,a5
-	lbu	a5,0(a5)
-	mv	a0,a5
-	lw	s0,28(sp)
-	addi	sp,sp,32
-	jr	ra
+	add	a0,a0,a1
+	lbu	a0,0(a0)
+	ret
 	.size	_string_ord, .-_string_ord
 	.align	2
 	.globl	_string_add
