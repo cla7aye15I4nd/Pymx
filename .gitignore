@@ -163,3 +163,4 @@ tools/builtin.ll
 batch.py
 *.out
 domin*.png
+optimize.bash
