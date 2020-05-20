@@ -164,3 +164,4 @@ batch.py
 *.out
 domin*.png
 optimize.bash
+output.s

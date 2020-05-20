@@ -108,12 +108,20 @@ def generate_arith(g, obj):
             'and'  : ANDI,
             'xor'  : XORI,
         }
-        if obj.oper in operator:
+        if obj.oper in operator and obj.rhs.name in range(-2048, 2048):
             res.append(operator[obj.oper](dv, lv, obj.rhs.name))
         else:
             rv = ctx.get_vr()
             res.append(LI(rv, obj.rhs.name))
             operator = {
+                'add'  : ADD,   
+                'shl'  : SLL,
+                'ashr' : SRA,
+                'or'   : OR,
+                'and'  : AND,
+                'xor'  : XOR,                
+                'mul'  : MUL,
+                'sub'  : SUB,               
                 'srem' : REM,
                 'mul'  : MUL,
                 'sub'  : SUB,
