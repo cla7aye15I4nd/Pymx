@@ -55,8 +55,11 @@ def generate_store(g, obj):
 
 def generate_load(g, obj):
     res = []
-    dst = generate_register(obj.dst, res)    
-    if obj.src.name[0] == '@':        
+    dst = generate_register(obj.dst, res)  
+    if type(obj.src) is Const:
+        offset = 0
+        src = generate_register(obj.src, res)
+    elif obj.src.name[0] == '@':        
         src = dst
         name = obj.src.name[1:]
         offset = f'%lo({name})'        
