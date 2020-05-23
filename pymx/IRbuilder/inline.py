@@ -9,7 +9,30 @@ from pymx.fakecode.inst import (
     Load, Call, Malloc, Arith, Logic
 )
 
-def try_inline(prog, func, args):
+def try_inline(prog, func, args):    
+    flag = False
+    mask = True
+    function = deepcopy(func)
+    count = 1
+    
+    while count > 0 and mask:        
+        function, mask = _try_inline(prog, function, args)
+        
+        count -= 1
+        flag |= mask
+
+    if flag:
+        func.code = function.code
+        cfg = build_CFG(func, args)    
+        
+        optimizer.peephole.optimize(cfg)
+        optimizer.constant_fold(cfg)
+        optimizer.dce.optimize(cfg)
+        optimizer.peephole.optimize(cfg)            
+                
+        func.code = cfg.serial()           
+
+def _try_inline(prog, func, args):
     inline_threshold = 50
 
     max_id = 0
@@ -125,18 +148,11 @@ def try_inline(prog, func, args):
                 if unit[1].label in label_map:
                     unit[1].label = label_map[unit[1].label]
     
-    
-    
     if do_inline:
         func.code = code
-        cfg = build_CFG(func, args)    
-    
-        optimizer.peephole.optimize(cfg)
-        optimizer.constant_fold(cfg)
-        optimizer.dce.optimize(cfg)
-        optimizer.peephole.optimize(cfg)            
-            
-        func.code = cfg.serial()        
+             
+
+    return func, do_inline
 
 def replace(inst, replace_hook):
     if type(inst) is Store:
