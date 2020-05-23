@@ -6,13 +6,20 @@ class Prog:
     def __init__(self):
         self.vars = []
         self.func = []
-        self.struct = []        
+        self.struct = []
+        self.func_map = {}        
 
     def add_function(self, func):
+        self.func_map[func.name] = func
         self.func.append(func)
 
     def add_struct(self, struct):
         self.struct.append(struct)
+
+    def __getitem__(self, name):
+        if name not in self.func_map:
+            return None
+        return self.func_map[name]
 
     def __str__(self):
         code = ""
