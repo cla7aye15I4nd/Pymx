@@ -17,14 +17,11 @@ int _string_ord(char*, int);
 char* _string_add(char*, char*);
 
 void print(char* str) {
-  int len = *(int*)(str-4);
-  for (int i = 0; i < len; ++i)
-    putchar(str[i]);
+  printf("%s", str);
 }
 
 void println(char* str) {
-  print(str);
-  putchar('\n');
+  printf("%s\n", str);
 }
 
 void printInt(int x) {
@@ -32,8 +29,7 @@ void printInt(int x) {
 }
 
 void printlnInt(int x) {
-  printInt(x);
-  putchar('\n');
+  printf("%d\n", x);
 }
 
 int getInt() {
@@ -75,7 +71,6 @@ char* toString(int x) {
     s[i+flag] = *--top + '0';
   return s;
 }
-
 char* _string_substring(char* s, int l, int r) {
   char* a = (char*) malloc(r - l + 4);
   *(int*) a = r - l;
