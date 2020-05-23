@@ -32,6 +32,10 @@ def elim_constant(cfg):
                 table[inst.dest().name] = retval
                 block.code.remove(inst)            
     
+    for block in cfg.block.values():
+        for inst in block.code:
+            replace(inst, replace_hook)
+
     return flag
 
 def elim_branch(cfg):
@@ -72,9 +76,9 @@ def elim_phi(cfg):
 
     def replace_hook(var):
         global flag
-        if hasattr(var, 'name') and var.name in table:
+        while hasattr(var, 'name') and var.name in table:
             flag = True
-            return deepcopy(table[var.name])
+            var = deepcopy(table[var.name])
         return var
     
     for block in cfg.block.values():

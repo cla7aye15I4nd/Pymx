@@ -16,13 +16,17 @@ def optimize(cfg, args):
     mem2reg.place_phi_node(cfg, domin)
     peephole.optimize(cfg)
 
+    dce.optimize(cfg)
+
     for _ in range(5):
         gvn.optimize(cfg)     
-        if args.optim:
-            mem.optimize(cfg)
         constant_fold(cfg)
-    sr.optimize(cfg)
-    dce.optimize(cfg)    
+
+    if cfg.name != 'main':
+        mem.optimize(cfg)
+        
+    dce.optimize(cfg)
+    sr.optimize(cfg)    
     peephole.optimize(cfg)    
 
     cfg._serial()
