@@ -21,9 +21,8 @@ def optimize(cfg, args):
     for _ in range(5):
         gvn.optimize(cfg)     
         constant_fold(cfg)
-
-    if cfg.name != 'main':
-        mem.optimize(cfg)
+        if cfg.name != 'main':
+            mem.optimize(cfg)
         
     dce.optimize(cfg)
     sr.optimize(cfg)    
