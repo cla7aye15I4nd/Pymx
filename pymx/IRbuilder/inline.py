@@ -10,7 +10,7 @@ from pymx.fakecode.inst import (
 )
 
 def try_inline(prog, func, args):
-    inline_threshold = 15
+    inline_threshold = 50
 
     max_id = 0
     replace_map = {}
