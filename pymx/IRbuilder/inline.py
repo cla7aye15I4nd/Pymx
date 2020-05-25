@@ -13,7 +13,7 @@ def try_inline(prog, func, args):
     flag = False
     mask = True
     function = deepcopy(func)
-    count = 1
+    count = max(len(func.name) // 5, 1)
     
     while count > 0 and mask:        
         function, mask = _try_inline(prog, function, args)
